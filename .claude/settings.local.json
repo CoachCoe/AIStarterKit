@@ -4,6 +4,13 @@
       "Read",
       "Glob",
       "Grep",
+      "Bash(forge build:*)",
+      "Bash(forge test:*)",
+      "Bash(forge coverage:*)",
+      "Bash(forge fmt:*)",
+      "Bash(forge inspect:*)",
+      "Bash(anvil:*)",
+      "Bash(cast:*)",
       "Bash(pnpm:*)",
       "Bash(npm:*)",
       "Bash(yarn:*)",
@@ -26,9 +33,28 @@
       "Bash(touch:*)",
       "Bash(cp:*)",
       "Bash(mv:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(source:*)",
+      "WebFetch(domain:previewnet.substrate.dev)",
+      "Bash(for repo in /Users/shawncoe/Documents/dev/product-infrastructure /Users/shawncoe/Documents/dev/dotns-sdk /Users/shawncoe/Documents/dev/polkadot-bulletin-chain /Users/shawncoe/Documents/dev/Agent-Skills-for-Context-Engineering /Users/shawncoe/Documents/dev/claude-security-check)",
+      "Bash(do)",
+      "Bash(if [ -d \"$repo/.git\" ])",
+      "Bash(then)",
+      "Bash(git -C \"$repo\" remote get-url origin)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(for repo in /Users/shawncoe/Documents/dev/polkadot-bulletin-chain /Users/shawncoe/Documents/dev/claude-security-check)",
+      "Bash(else)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git clean -f:*)"
     ],
     "ask": [
+      "Bash(forge script:*)",
+      "Bash(forge create:*)",
+      "Bash(forge install:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
@@ -36,12 +62,8 @@
       "Bash(git merge:*)",
       "Bash(git rebase:*)",
       "Bash(rm:*)",
-      "Bash(rmdir:*)"
-    ],
-    "deny": [
-      "Bash(git push --force:*)",
-      "Bash(git reset --hard:*)",
-      "Bash(git clean -f:*)"
+      "Bash(rmdir:*)",
+      "Bash(forge clean:*)"
     ]
   }
 }

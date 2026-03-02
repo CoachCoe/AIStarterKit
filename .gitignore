@@ -6,7 +6,13 @@ dist/
 build/
 out/
 
-# Environment files (but keep templates)
+# Foundry
+cache/
+broadcast/
+*.abi
+*.bin
+
+# Environment files (NEVER COMMIT)
 .env
 .env.local
 .env.*.local
@@ -25,6 +31,14 @@ npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
+# Coverage
+coverage/
+lcov.info
+coverage.json
+
+# TypeScript
+*.tsbuildinfo
+
 # Note: .claude/settings.local.json is intentionally tracked
 # as a template. Projects using this starter kit should
-# customize their own settings.local.json
+# customize their own settings.

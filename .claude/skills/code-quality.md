@@ -14,14 +14,29 @@ description: "Enforce minimal code philosophy and exceptional quality. Triggers:
 
 ---
 
+## Core Philosophy
+
+**Every feature should be implemented with the LEAST amount of code possible.**
+
+The best code is no code. The second best code is minimal code.
+
+**Code must be exceptionally organized.**
+
+Clear structure, logical grouping, consistent patterns. Organization is not optional.
+
+---
+
 ## Global Invariants
 
 | Rule | Enforcement | Status |
 |------|-------------|--------|
+| Least code wins | Fewer lines = better | MANDATORY |
+| Exceptional organization | Clear structure, logical grouping | MANDATORY |
 | Build only what's requested | No speculative features | MANDATORY |
 | Delete unused code | Don't comment out | MANDATORY |
 | Three lines > premature abstraction | Keep it simple | MANDATORY |
 | Self-documenting code | Comments explain WHY | MANDATORY |
+| No code bloat | Trim everything unnecessary | MANDATORY |
 
 ---
 

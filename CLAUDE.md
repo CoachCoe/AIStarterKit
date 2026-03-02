@@ -1,6 +1,6 @@
-# Project Name
+# Polkadot AI Starter Kit
 
-> Brief tagline describing your project
+> Build on Polkadot with AI-assisted development
 
 ## Agent Context
 
@@ -12,81 +12,143 @@
 
 ## Project Overview
 
-<!-- Describe what this project does, its purpose, and key features -->
-
-This project is...
+This is a starter kit for building dApps on Polkadot Asset Hub EVM. It includes pre-configured Claude Code skills for smart contract development, testing, and deployment.
 
 ### Key Concepts
 
-<!-- Define important domain terms -->
-
-- **Term 1**: Definition
-- **Term 2**: Definition
-- **Term 3**: Definition
+- **Asset Hub**: Polkadot's system parachain for asset management with EVM compatibility
+- **UUPS Proxy**: Upgradeable contract pattern using OpenZeppelin
+- **Paseo**: Polkadot's testnet for development and testing
 
 ---
 
 ## Architecture
 
-### Directory Structure
+### pnpm Monorepo Structure
 
 ```
 project/
 ├── .claude/                     # AI agent configuration
 │   ├── AGENTS.md                # Agent constraints (READ FIRST)
 │   ├── settings.local.json      # Permissions
-│   ├── skills/                  # Domain knowledge
-│   └── commands/                # Reusable workflows
+│   └── skills/                  # Domain knowledge
+├── packages/
+│   ├── contracts/               # Solidity contracts (Foundry)
+│   │   ├── contracts/
+│   │   ├── script/
+│   │   ├── test/
+│   │   ├── lib/
+│   │   └── foundry.toml
+│   └── web/                     # Frontend (optional)
+│       ├── src/
+│       └── package.json
 ├── CLAUDE.md                    # This file
-├── src/                         # Source code
-│   ├── app/                     # Application code
-│   ├── lib/                     # Utilities
-│   └── types/                   # TypeScript types
-├── tests/                       # Test files
-└── docs/                        # Documentation
+├── pnpm-workspace.yaml          # Workspace config
+├── package.json                 # Root package.json
+└── .env                         # Environment variables (NEVER COMMIT)
 ```
 
 ### Technology Stack
 
 | Layer | Technology | Rationale |
 |-------|-----------|-----------|
-| Language | TypeScript | Type safety |
-| Framework | <!-- Your framework --> | <!-- Why --> |
-| Testing | <!-- Your test framework --> | <!-- Why --> |
-| CI/CD | GitHub Actions | Standard |
+| Monorepo | pnpm workspaces | Fast, disk-efficient |
+| Contracts | Solidity 0.8.20+ | EVM compatibility |
+| Framework | Foundry | Fast testing, scripting |
+| Upgrades | OpenZeppelin UUPS | Battle-tested patterns |
+| Network | **Paseo Asset Hub** | Primary target chain |
+| Frontend | React/Vite | Minimal, fast |
+| Testing | Forge + Vitest | Contracts + Frontend |
+
+### Target Chain
+
+**Primary: Paseo Asset Hub EVM** (testnet) → **Polkadot Asset Hub EVM** (mainnet)
+
+We do NOT use Moonbeam. Asset Hub is the native Polkadot solution for EVM contracts.
+
+---
+
+## Network Configuration
+
+### Development Workflow
+
+```
+Local Anvil → Previewnet → Paseo → Mainnet
+   (fast)    (no faucet)  (public)  (prod)
+```
+
+### Previewnet (Local Development)
+- RPC: `https://previewnet.substrate.dev/eth-rpc`
+- Pre-funded accounts (Alice, Bob, etc.)
+- No faucet needed - ephemeral network
+- Web UI: https://previewnet.substrate.dev
+
+### Paseo Testnet (Integration Testing)
+- RPC: `https://paseo-asset-hub-eth-rpc.polkadot.io`
+- Chain ID: `420420421`
+- Block Explorer: https://paseo.subscan.io
+- Faucet: https://faucet.polkadot.io
+
+### Polkadot Mainnet (Production)
+- RPC: `https://polkadot-asset-hub-eth-rpc.polkadot.io`
+- Chain ID: `420420420`
+- Block Explorer: https://assethub-polkadot.subscan.io
 
 ---
 
 ## Coding Standards
 
-### TypeScript
+### Code Philosophy
+
+**Every feature should be implemented with the least amount of code possible.**
+
+**Code must be exceptionally organized.**
+
+| Principle | Implementation |
+|-----------|----------------|
+| Least code wins | Minimum code to achieve the goal |
+| Exceptional organization | Clear structure, logical grouping |
+| No code bloat | Delete anything unused |
+| No over-engineering | Build exactly what's requested |
+| No premature abstraction | 3 similar lines > 1 premature helper |
+| No speculative features | YAGNI (You Aren't Gonna Need It) |
+| No wrapper functions | Call directly unless adding real value |
+
+### Solidity
+
+- **Solidity 0.8.20+** for latest features
+- **SPDX license identifiers** on every file
+- **NatSpec comments** for public functions only
+- **OpenZeppelin contracts** for standard patterns
+- **UUPS pattern** for upgradeability
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
+/// @title MyContract
+/// @notice Brief description
+contract MyContract is Initializable, UUPSUpgradeable {
+    // Implementation - keep it minimal
+}
+```
+
+### TypeScript (Frontend)
 
 - **Strict mode always** (`"strict": true`)
 - **No `any`** — use `unknown` and type guards
-- **No `as` assertions** unless documented
 - **Explicit return types** on exports
-- **Branded types** for domain IDs
-
-```typescript
-// Branded types for domain safety
-type UserId = string & { readonly __brand: 'UserId' };
-
-// Explicit return types
-export function getUser(id: UserId): Promise<User | null> { ... }
-```
+- **Minimal dependencies** — justify every `pnpm add`
 
 ### Code Quality
 
-- **Build only what's requested** — no speculative features
-- **Delete unused code** — don't comment out
+- **Least code wins** — if it can be done in fewer lines, do it
+- **Delete unused code** — don't comment out, delete it
 - **Self-documenting code** — comments explain WHY, not WHAT
-- **No premature abstraction** — three similar lines > one premature helper
-
-### Error Handling
-
-- **Never swallow errors** — log and surface meaningfully
-- **Boundary errors at the edge** — ErrorBoundary, middleware
-- **Structured logging** — no `console.log` in production
+- **No premature abstraction** — wait until pattern is clear (rule of 3)
 
 ### Git Conventions
 
@@ -100,33 +162,44 @@ export function getUser(id: UserId): Promise<User | null> { ... }
 
 ### Coverage Requirements
 
-- **Minimum 80% line coverage**
-- **100% for security-critical code**
+- **Minimum 80% line coverage** for contracts
+- **100% for security-critical code** (access control, funds handling)
 
-### Test Structure
+### Foundry Test Structure
 
-```typescript
-describe('Component', () => {
-  describe('rendering', () => {
-    it('renders expected content', () => { ... });
-  });
+```solidity
+contract MyContractTest is Test {
+    function setUp() public {
+        // Deploy contracts
+    }
 
-  describe('behavior', () => {
-    it('handles user interaction', () => { ... });
-  });
+    function test_HappyPath() public {
+        // Test expected behavior
+    }
 
-  describe('edge cases', () => {
-    it('handles empty state', () => { ... });
-  });
-});
+    function test_RevertWhen_InvalidInput() public {
+        vm.expectRevert("Error message");
+        // Call that should revert
+    }
+
+    function testFuzz_WithRandomInput(uint256 value) public {
+        vm.assume(value > 0 && value < 1000);
+        // Fuzz test
+    }
+}
 ```
 
 ### Commands
 
 ```bash
-pnpm test              # Run all tests
-pnpm test:coverage     # Coverage report
-pnpm test:mutation     # Mutation testing (if configured)
+# Solidity tests
+forge test              # Run all tests
+forge test -vvv         # Verbose output
+forge coverage          # Coverage report
+
+# TypeScript tests (if frontend)
+pnpm test               # Run tests
+pnpm test:coverage      # Coverage report
 ```
 
 ---
@@ -134,21 +207,23 @@ pnpm test:mutation     # Mutation testing (if configured)
 ## Development Commands
 
 ```bash
-# Setup
-pnpm install           # Install dependencies
-pnpm dev               # Start development
+# Foundry
+forge build             # Compile contracts
+forge test              # Run tests
+forge test -vvv         # Verbose tests
+forge coverage          # Coverage report
+forge fmt               # Format Solidity
 
-# Quality
-pnpm lint              # Lint (must pass with zero warnings)
-pnpm typecheck         # TypeScript checking
-pnpm format            # Format code
+# Deployment
+source .env             # Load environment
+forge script script/Deploy.s.sol --rpc-url paseo --broadcast --slow -vvvv
 
-# Testing
-pnpm test              # Run tests
-pnpm test:coverage     # Coverage report
-
-# Build
-pnpm build             # Production build
+# Frontend (if applicable)
+pnpm install            # Install dependencies
+pnpm dev                # Start development
+pnpm build              # Production build
+pnpm lint               # Lint
+pnpm typecheck          # TypeScript checking
 ```
 
 ---
@@ -160,10 +235,17 @@ Domain-specific knowledge in `.claude/skills/`:
 | Skill | Purpose | Triggers |
 |-------|---------|----------|
 | `code-quality.md` | Minimal code philosophy | quality, refactor, YAGNI |
-| `testing.md` | Test patterns | test, coverage, mutation |
+| `testing.md` | Test patterns (TypeScript) | test, coverage, spec |
 | `security.md` | Security baseline | security, validation, audit |
-
-<!-- Add your domain-specific skills here -->
+| `previewnet.md` | Ephemeral dev network | previewnet, local dev, no faucet |
+| `asset-hub-evm.md` | Polkadot Asset Hub EVM config | asset hub, polkadot, paseo |
+| `upgradeable-contracts.md` | OpenZeppelin UUPS patterns | upgradeable, proxy, UUPS |
+| `deploy-contracts/` | Contract deployment workflow | deploy, deployment, mainnet |
+| `deploy-frontend/` | Bulletin Chain + DotNS deployment | deploy frontend, dotns, bulletin |
+| `host-api.md` | Triangle/Host API (early-stage) | host api, triangle, product sdk |
+| `foundry-testing/` | Foundry/Solidity test patterns | forge test, solidity test |
+| `mutation-testing/` | Stryker mutation testing | mutation, stryker, test quality |
+| `skill-creator/` | Create new skills | create skill, new skill |
 
 **Usage**: Load relevant skills before implementing features in that domain.
 

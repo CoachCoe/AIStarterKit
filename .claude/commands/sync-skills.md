@@ -6,64 +6,57 @@ description: Sync skills from reference repositories to check for updates
 
 Check reference repositories for skill updates and improvements.
 
-## Usage
+## Reference Documentation
+
+See `.claude/SOURCES.md` for:
+- Full list of reference repositories with GitHub URLs
+- Skill-to-source mapping
+- Update process
+
+## Quick Sync (GitHub)
 
 ```bash
-# Run the sync check script
-./scripts/skill-sync.sh
+# Clone reference repos (first time)
+mkdir -p ~/polkadot-refs && cd ~/polkadot-refs
+git clone https://github.com/paritytech/product-infrastructure.git
+git clone https://github.com/paritytech/dotns-sdk.git
+git clone https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering.git
+
+# Update all (subsequent times)
+cd ~/polkadot-refs
+for repo in */; do git -C "$repo" pull; done
 ```
 
-## Reference Repositories
-
-Configure your reference repos in `scripts/skill-sync.sh`:
+## Check for Updates
 
 ```bash
-REFERENCE_REPOS=(
-  "/path/to/reference-repo-1"
-  "/path/to/reference-repo-2"
-)
+# See what's changed in each repo
+cd ~/polkadot-refs
+for repo in */; do
+  echo "=== $repo ==="
+  git -C "$repo" log --oneline -5
+done
 ```
 
-## Sync Workflow
+## What to Check
 
-### Step 1: Check for Updates
+| Repo | Look For |
+|------|----------|
+| product-infrastructure | Previewnet changes, new endpoints |
+| dotns-sdk | CLI command changes, new features |
+| Agent-Skills-for-Context-Engineering | New skill patterns, improvements |
 
-The script:
-1. Fetches from remote for each reference repo
-2. Compares local HEAD to origin
-3. Reports if updates are available
+## Update Workflow
 
-### Step 2: Review Changes
-
-If updates found:
-1. Pull the reference repo
-2. Check `.claude/skills/` for changes
-3. Compare against your local skills
-
-### Step 3: Update Local Skills
-
-For each changed skill:
-1. Read the updated reference
-2. Identify what's new/changed
-3. Update your local skill
-4. Add changelog entry
-
-## Changelog Format
-
-Add to bottom of each skill when updated:
-
-```markdown
----
-
-## Changelog
-
-| Date | Change | Source |
-|------|--------|--------|
-| 2024-XX-XX | Added pattern X | reference-repo v1.2.0 |
-```
+1. Pull latest from reference repos
+2. Check `.claude/SOURCES.md` for skill-to-source mapping
+3. Compare reference files with local skills
+4. Update skills with new information
+5. Test that commands still work
+6. Commit with source reference
 
 ## When to Sync
 
-- Before starting major work
 - Weekly during active development
-- After reference repo announces updates
+- Before major releases
+- When endpoints or commands stop working
