@@ -4,7 +4,22 @@
 
 Use when building Products for the Polkadot Triangle ecosystem (Desktop, Web, Mobile hosts).
 
-**Status: Early Stage (v0.5) - APIs are evolving rapidly. Expect breaking changes.**
+**Status: Early Stage (v0.6) - APIs are evolving rapidly. Expect breaking changes.**
+
+## Reference Implementation
+
+**For working code and detailed patterns, see the `triangle-web-host-demo` repository.**
+
+The CLAUDE.md in that repo (500+ lines) covers:
+- SpektrManager API for container orchestration
+- DotNS resolution with dual-chain racing
+- Wallet authentication (Papp QR + browser extensions)
+- Service Worker IPFS caching
+- @novasamatech/* package usage
+
+This skill provides a conceptual overview. For implementation details, use triangle-web-host-demo.
+
+---
 
 ## What is the Triangle?
 
@@ -18,198 +33,114 @@ The Polkadot Triangle consists of three hosts that run sandboxed Products:
 
 **Key Insight:** Products are sandboxed - no direct HTTP/HTTPS access. All external interactions go through Host API.
 
-## Core Concepts
+## Core Packages
 
-### Sandboxed Products
+```bash
+# Install the SDK packages
+pnpm add @novasamatech/host-api
+pnpm add @novasamatech/host-container
+pnpm add @novasamatech/product-sdk
+pnpm add @novasamatech/host-papp
+pnpm add @novasamatech/host-papp-react-ui
+```
+
+| Package | Purpose |
+|---------|---------|
+| `@novasamatech/host-api` | Protocol, types, error definitions |
+| `@novasamatech/host-container` | Host-side: manage embedded dapps |
+| `@novasamatech/product-sdk` | Embedded-side: SDK for dapps in iframes |
+| `@novasamatech/host-papp` | Polkadot mobile app authentication |
+| `@novasamatech/host-papp-react-ui` | React components for Papp auth UI |
+
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────┐
 │  Host (Desktop/Web/Mobile)              │
 │  ┌───────────────────────────────────┐  │
-│  │  Product (Your dApp)              │  │
+│  │  Product (Your dApp in iframe)    │  │
 │  │  - No direct network access       │  │
 │  │  - Uses Host API for everything   │  │
+│  │  - @novasamatech/product-sdk      │  │
 │  └───────────────────────────────────┘  │
 │  ┌───────────────────────────────────┐  │
-│  │  Host API Layer                   │  │
+│  │  Host Container                   │  │
+│  │  - @novasamatech/host-container   │  │
 │  │  - Accounts, Signing, Storage     │  │
-│  │  - Chain access, Chat, Statements │  │
+│  │  - JSON-RPC proxy to chains       │  │
 │  └───────────────────────────────────┘  │
 │  ┌───────────────────────────────────┐  │
-│  │  Light Client / Polkadot Infra    │  │
+│  │  Light Client / RPC               │  │
 │  └───────────────────────────────────┘  │
 └─────────────────────────────────────────┘
 ```
 
+## Key Concepts
+
+### Sandboxed Products
+
+Products run in iframes with no direct network access. The host provides:
+- Account injection via `window.injectedWeb3.spektr`
+- Signing delegation to Polkadot App or browser extensions
+- JSON-RPC proxy for chain access
+- Scoped localStorage per product
+
 ### Derived Accounts (Privacy Model)
 
 Each Product gets its own derived account from the user's root identity:
-
-- User has ONE root identity (from Polkadot App)
-- Each Product gets a unique derived account: `/product/{productId}/{index}`
 - Accounts are **unlinkable by default** - no cross-product tracking
-- User can optionally link accounts if they want public reputation
+- User can optionally link accounts for public reputation
 
-```
-Root Identity (never exposed)
-    │
-    ├── //wallet (registered on-chain)
-    │
-    ├── /hackm3 (HackM3 app account)
-    ├── /mark3t (Market app account)
-    └── /tick3t (Ticketing app account)
-```
+### DotNS Resolution
 
-### Session Keys (Current Workaround)
-
-Until auto-signing is implemented, Products use session keys to avoid requiring phone approval for every transaction:
-
-1. User approves session key creation (one-time, on phone)
-2. Product uses session key for subsequent transactions
-3. Session key has limited permissions/lifetime
-
-## Development Workflow
-
-### 1. Deploy Product to Bulletin
-
-Use dotNS CLI to deploy your built frontend:
-
-```bash
-# Build with base: './' for IPFS compatibility
-pnpm build
-
-# Upload to Bulletin (requires PoP setup first!)
-bun run src/cli/index.ts bulletin upload ./dist --parallel -m "$DOTNS_MNEMONIC"
-
-# Set content hash on domain
-bun run src/cli/index.ts content set <domain> <cid> -m "$DOTNS_MNEMONIC"
-```
-
-### 2. Test in Polkadot Desktop
-
-```bash
-# Download Polkadot Desktop from releases
-# https://github.com/nickreynolds/nickreynolds.github.io/releases (TBD: official URL)
-
-# For local development, search for:
-localhost:3000
-```
-
-### 3. Install Product SDK
-
-```bash
-pnpm add @polkadot-triangle/product-sdk
-```
-
-### 4. Basic Integration
-
-```typescript
-import { ProductSdk } from '@polkadot-triangle/product-sdk';
-
-// Check if running inside host
-const isInHost = await ProductSdk.isConnected();
-
-// Get user account (derived for your product)
-const account = await ProductSdk.getAccount();
-
-// Sign transaction (prompts user on Polkadot App)
-const signature = await ProductSdk.signTransaction(payload);
-
-// Local storage (scoped to your product)
-await ProductSdk.localStorage.write('key', value);
-const data = await ProductSdk.localStorage.read('key');
-```
+Products are loaded from IPFS via `.dot` domain resolution:
+1. Query dotNS resolver for contenthash
+2. Fetch from IPFS gateway
+3. Cache in Service Worker
+4. Serve in sandboxed iframe
 
 ## What's Available Now
 
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Product deployment | ✅ Working | Via Bulletin + dotNS |
-| Account/signing | ✅ Working | Requires phone approval each time |
+| Account/signing | ✅ Working | Papp (QR) or browser extensions |
 | Local storage | ✅ Working | Key-value, scoped per product |
 | Localhost dev | ✅ Working | Search `localhost:3000` in Desktop |
-| Chain queries | ✅ Working | Via Host API, not direct RPC |
+| Chain queries | ✅ Working | Via Host API proxy |
 
 ## What's Not Ready Yet
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Auto-signing | 🚧 Planned | Currently need phone for every tx |
+| Auto-signing | 🚧 Planned | Currently need approval for every tx |
 | Chat integration | 🚧 Stubs only | API defined but not implemented |
 | Notifications | 🚧 Planned | Push notifications to products |
 | Fine-grained permissions | 🚧 Planned | Per-extrinsic approval |
-| Background sync | 🚧 Planned | Cross-device data sync |
-| P2P networking | 🚧 Planned | Direct product-to-product |
-
-## Product Onboarding Pattern
-
-From HackM3's experience - check these on app load:
-
-```typescript
-async function checkOnboarding() {
-  // 1. Is user connected via Polkadot App?
-  const connected = await ProductSdk.isConnected();
-
-  // 2. Does signer have balance for fees?
-  const balance = await getSignerBalance();
-
-  // 3. Is address mapped (Substrate <-> Ethereum)?
-  const mapped = await checkAddressMapping();
-
-  // 4. Session key created and funded?
-  const sessionKey = await checkSessionKey();
-
-  // 5. Statement store allowance?
-  const allowance = await checkStatementStoreAllowance();
-
-  // Redirect to onboarding if any step incomplete
-  if (!connected || !balance || !mapped || !sessionKey || !allowance) {
-    redirectToOnboarding();
-  }
-}
-```
-
-## Reference Repositories
-
-| Repo | Purpose |
-|------|---------|
-| [triangle-js-sdks](https://github.com/nickreynolds/nickreynolds.github.io) | Product SDK, Host SDK |
-| [polkadot-browser](https://github.com/nickreynolds/nickreynolds.github.io) | Desktop app source |
-| Product SDK test app | Search `test-product-sdk-33.dot` in Desktop |
-
-## Key Differences from Traditional dApps
-
-| Traditional | Triangle Product |
-|-------------|------------------|
-| Direct RPC to nodes | All chain access via Host API |
-| Browser extension wallets | Polkadot App only |
-| User selects account | Derived account per product |
-| Direct HTTP requests | All external requests blocked |
-| IndexedDB, localStorage | Host-managed storage |
 
 ## Anti-Patterns
 
 | Pattern | Status | Reason |
 |---------|--------|--------|
 | Direct HTTP/fetch calls | FORBIDDEN | Sandboxed, will fail |
-| Using browser extensions | FORBIDDEN | Only Polkadot App works |
 | Bundling light client | FORBIDDEN | Host provides chain access |
 | Assuming stable API | RISKY | APIs changing rapidly |
 | Building for all 3 hosts | RISKY | Focus on Desktop first |
 
+## Development Workflow
+
+1. **Build your Product** - Standard web app with `@novasamatech/product-sdk`
+2. **Deploy to Bulletin** - See `deploy-frontend/` skill for dotNS setup
+3. **Test in Desktop** - Search for your `.dot` domain or `localhost:3000`
+
 ## Resources
 
-- [Host API PRD](https://docs.google.com/document/d/...) - Product requirements
-- [Host API Design Doc](https://hackmd.io/@example/...) - Technical spec
+- **triangle-web-host-demo** - Complete reference implementation
 - [Triangle SDK Sandbox](https://spektr-sdk-sandbox-dev.novaspektr.io/) - Live demo
-- Desktop channel (internal) - Daily build updates
 
-## Versioning Note
+## Versioning
 
-Product SDK and Host versions must match. Check Desktop channel for latest compatible versions.
-
+SDK and Host versions must match:
 ```
-Product SDK 0.54 <-> Desktop build 0.54
+@novasamatech/* 0.6.1 <-> Desktop build 0.6.x
 ```
-
-When Desktop updates, expect to update Product SDK dependency.
