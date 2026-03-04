@@ -1,6 +1,6 @@
 ---
 name: code-quality
-description: "Enforce minimal code philosophy and exceptional quality. Triggers: quality, refactor, clean, minimal, bloat, simplify, YAGNI"
+description: "Enforce minimal code philosophy with measurable constraints. Triggers: quality, refactor, clean, minimal, bloat, simplify, YAGNI"
 ---
 
 # Code Quality Skill
@@ -14,35 +14,77 @@ description: "Enforce minimal code philosophy and exceptional quality. Triggers:
 
 ---
 
-## Core Philosophy
+## Global Invariants
 
-**Every feature should be implemented with the LEAST amount of code possible.**
-
-The best code is no code. The second best code is minimal code.
-
-**Code must be exceptionally organized.**
-
-Clear structure, logical grouping, consistent patterns. Organization is not optional.
+| Rule | Constraint | Status |
+|------|------------|--------|
+| Least code wins | Fewer lines = better | MANDATORY |
+| Function length | ≤60 lines | MANDATORY |
+| Cyclomatic complexity | ≤15 per function | MANDATORY |
+| Function parameters | ≤4 (use options object beyond) | MANDATORY |
+| File length | 300-450 soft limit, 600 hard limit | MANDATORY |
+| Build only what's requested | No speculative features | MANDATORY |
+| Delete unused code | Don't comment out | MANDATORY |
 
 ---
 
-## Global Invariants
+## Numeric Constraints
 
-| Rule | Enforcement | Status |
-|------|-------------|--------|
-| Least code wins | Fewer lines = better | MANDATORY |
-| Exceptional organization | Clear structure, logical grouping | MANDATORY |
-| Build only what's requested | No speculative features | MANDATORY |
-| Delete unused code | Don't comment out | MANDATORY |
-| Three lines > premature abstraction | Keep it simple | MANDATORY |
-| Self-documenting code | Comments explain WHY | MANDATORY |
-| No code bloat | Trim everything unnecessary | MANDATORY |
+| Metric | Soft Limit | Hard Limit | Action |
+|--------|------------|------------|--------|
+| Function lines | 40 | 60 | Extract helper |
+| File lines | 300 | 600 | Split file |
+| Parameters | 3 | 4 | Use options object |
+| Nesting depth | 3 | 4 | Extract or early return |
+| Cyclomatic complexity | 10 | 15 | Simplify logic |
+
+---
+
+## Parameter Patterns
+
+| Pattern | When to Use | Example |
+|---------|-------------|---------|
+| Positional (1-2 args) | Simple, obvious order | `add(a, b)` |
+| Positional (3 args) | Still clear, rare | `clamp(value, min, max)` |
+| Options object | 4+ args or optional params | `createUser({ name, email, role? })` |
+| Builder pattern | Complex construction | `QueryBuilder.select().where().limit()` |
+
+**Options Object Pattern:**
+```typescript
+// ✅ CORRECT: Options object for 4+ params
+interface CreateUserOptions {
+  name: string;
+  email: string;
+  role?: 'admin' | 'user';
+  sendWelcome?: boolean;
+}
+function createUser(options: CreateUserOptions): User
+
+// ❌ FAIL: Too many positional params
+function createUser(name: string, email: string, role: string, sendWelcome: boolean): User
+```
+
+---
+
+## Abstraction Decision Framework
+
+Before extracting a function/class, answer these:
+
+| Question | If NO | If YES |
+|----------|-------|--------|
+| Used 3+ times? | Don't extract | Consider extraction |
+| Reduces complexity? | Don't extract | Extract |
+| Has clear name? | Don't extract | Extract |
+| Hides implementation detail? | Keep inline | Extract |
+| Will change independently? | Keep together | Separate |
+
+**Rule of Three**: Don't abstract until third occurrence.
 
 ---
 
 ## Core Principles
 
-### 1. YAGNI — You Aren't Gonna Need It
+### YAGNI — You Aren't Gonna Need It
 
 | ✅ DO | ❌ DON'T |
 |-------|---------|
@@ -50,21 +92,48 @@ Clear structure, logical grouping, consistent patterns. Organization is not opti
 | Solve the specific problem | Design for hypothetical futures |
 | Write minimal working code | Build "extensible" frameworks |
 
-### 2. The Right Amount of Complexity
-
-| ✅ DO | ❌ DON'T |
-|-------|---------|
-| Three similar lines of code | Premature helper function |
-| Direct implementation | Factory pattern for one class |
-| Inline logic where clear | Utility function used once |
-
-### 3. Delete, Don't Comment
+### Delete, Don't Comment
 
 | ✅ DO | ❌ DON'T |
 |-------|---------|
 | `git rm unused-file.ts` | `// TODO: remove later` |
 | Remove unused imports | `_unusedVariable` renaming |
 | Delete dead branches | `// OLD: previous impl` |
+
+---
+
+## Naming Conventions
+
+| Principle | Rule | Example |
+|-----------|------|---------|
+| What it does | Name describes behavior | `validateEmail` not `check` |
+| Why it exists | Purpose is clear | `retryWithBackoff` not `retry2` |
+| How much | Quantifiers when relevant | `maxRetries` not `retries` |
+
+**Prohibited Patterns:**
+
+| Pattern | Status | Instead |
+|---------|--------|---------|
+| Single letter vars (except loops) | FORBIDDEN | Descriptive name |
+| Abbreviations | FORBIDDEN | Full words |
+| Type in name | FORBIDDEN | `user` not `userObj` |
+| Negative booleans | FORBIDDEN | `isEnabled` not `isNotDisabled` |
+
+---
+
+## File Organization
+
+| Threshold | Action |
+|-----------|--------|
+| File > 300 lines | Consider splitting |
+| File > 450 lines | Plan to split |
+| File > 600 lines | MUST split |
+| Function > 60 lines | MUST extract |
+
+**Split Criteria:**
+- Separate by feature/domain
+- Separate by layer (data, logic, presentation)
+- Separate by change frequency
 
 ---
 
@@ -86,9 +155,8 @@ function Button({ loading, children }) {
 
 ❌ FAIL:
 ```typescript
-// User asked: "Add loading state"
 // OVER-ENGINEERED: Added size, variant, icon nobody asked for
-function Button({ loading, size, variant, icon, iconPosition, ... }) {
+function Button({ loading, size, variant, icon, ... }) {
   // 50 lines of configuration
 }
 ```
@@ -103,20 +171,8 @@ const date1 = new Date(item1.createdAt).toLocaleDateString();
 // Second occurrence - still fine
 const date2 = new Date(item2.createdAt).toLocaleDateString();
 
-// Third occurrence - NOW consider extraction
-function formatDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString();
-}
-```
-
-❌ FAIL:
-```typescript
-// First occurrence - premature abstraction
-const DateFormatter = {
-  format: (timestamp: number, options?: FormatOptions) => {
-    // 30 lines of configurability for single use
-  }
-};
+// Third occurrence - NOW extract
+const formatDate = (ts: number) => new Date(ts).toLocaleDateString();
 ```
 
 ---
@@ -128,6 +184,8 @@ const DateFormatter = {
 | Speculative features | FORBIDDEN | Build what's requested |
 | Commented-out code | FORBIDDEN | Delete (git has history) |
 | `_unusedVar` naming | FORBIDDEN | Remove the variable |
-| Premature abstraction | FORBIDDEN | Duplicate until clear |
-| `// TODO: refactor` | FORBIDDEN | Do it or create issue |
+| Premature abstraction | FORBIDDEN | Wait for 3rd occurrence |
 | Wrapper with no logic | FORBIDDEN | Call directly |
+| Functions >60 lines | FORBIDDEN | Extract helper |
+| Files >600 lines | FORBIDDEN | Split file |
+| >4 function params | FORBIDDEN | Use options object |

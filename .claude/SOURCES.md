@@ -8,6 +8,7 @@ This file documents the reference repositories that skills in this starter kit a
 |------------|------------|---------------|
 | product-infrastructure | https://github.com/paritytech/product-infrastructure | Previewnet config, deployment patterns |
 | dotns-sdk | https://github.com/paritytech/dotns-sdk | DotNS CLI usage, Bulletin deployment |
+| dotli | https://github.com/paritytech/dotli | Client-side resolution, Smoldot+Helia patterns |
 | Agent-Skills-for-Context-Engineering | https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering | Skill structure, best practices |
 
 ## Checking for Updates
@@ -18,11 +19,13 @@ This file documents the reference repositories that skills in this starter kit a
 # Clone or update reference repos
 git clone https://github.com/paritytech/product-infrastructure.git
 git clone https://github.com/paritytech/dotns-sdk.git
+git clone https://github.com/paritytech/dotli.git
 git clone https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering.git
 
 # Check for updates
 cd product-infrastructure && git pull
 cd ../dotns-sdk && git pull
+cd ../dotli && git pull
 cd ../Agent-Skills-for-Context-Engineering && git pull
 ```
 
@@ -35,6 +38,7 @@ Update local paths in your environment:
 export SKILL_REFS=(
   "$HOME/Documents/dev/product-infrastructure"
   "$HOME/Documents/dev/dotns-sdk"
+  "$HOME/Documents/dev/dotli"
   "$HOME/Documents/dev/Agent-Skills-for-Context-Engineering"
 )
 
@@ -55,6 +59,7 @@ done
 |-------|----------------|----------------|
 | `previewnet.md` | product-infrastructure | Previewnet docs, endpoints |
 | `deploy-frontend/` | dotns-sdk | CLI commands, PoP setup |
+| `dotli/` | dotli | src/*, config.ts, README |
 | `asset-hub-evm.md` | product-infrastructure | Network config |
 | `skill-creator/` | Agent-Skills-for-Context-Engineering | Skill templates |
 | `code-quality.md` | Agent-Skills-for-Context-Engineering | Quality patterns |

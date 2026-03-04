@@ -1,6 +1,6 @@
 ---
 name: testing
-description: "Implement effective testing patterns and maintain coverage. Triggers: test, coverage, mutation, spec, unit, integration"
+description: "Implement effective testing patterns with strategy selection. Triggers: test, coverage, mutation, spec, unit, integration, mock, stub"
 ---
 
 # Testing Skill
@@ -10,24 +10,96 @@ description: "Implement effective testing patterns and maintain coverage. Trigge
 - Writing new tests
 - Improving test coverage
 - Setting up test infrastructure
+- Choosing testing strategy
 - Evaluating test quality
 
 ---
 
 ## Global Invariants
 
-| Rule | Enforcement | Status |
-|------|-------------|--------|
-| 80%+ line coverage | CI gate | MANDATORY |
-| 100% for security code | Audit requirement | MANDATORY |
-| No test without assertions | Mutation testing catches | MANDATORY |
+| Rule | Constraint | Status |
+|------|------------|--------|
+| Line coverage | ≥80% | MANDATORY |
+| Security-critical code | 100% coverage | MANDATORY |
+| Mutation score | ≥80% | MANDATORY |
+| No test without assertions | Verified by mutation testing | MANDATORY |
 | Descriptive test names | Self-documenting | MANDATORY |
+
+---
+
+## Test Strategy Decision Matrix
+
+| Scenario | Strategy | Rationale |
+|----------|----------|-----------|
+| Pure function, clear I/O | Unit test | Fast, deterministic |
+| Business logic with rules | Property-based | Finds edge cases |
+| External dependencies | Integration test | Verifies real behavior |
+| UI components | Snapshot + interaction | Visual + behavioral |
+| API endpoints | Integration test | Full request/response |
+| Database operations | Integration test | Real DB behavior |
+| Complex algorithms | Property-based + unit | Exhaustive + readable |
+
+---
+
+## Test Doubles Taxonomy (Meszaros)
+
+| Double | Purpose | When to Use |
+|--------|---------|-------------|
+| **Dummy** | Fill parameter, never used | Required arg you don't care about |
+| **Stub** | Return canned answers | Control indirect inputs |
+| **Spy** | Record calls for verification | Verify interactions |
+| **Mock** | Verify expectations | Behavior verification |
+| **Fake** | Working implementation (simplified) | Replace slow/complex dependency |
+
+### Decision Guide
+
+```
+Need to fill a parameter?           → Dummy
+Need to control what SUT receives?  → Stub
+Need to verify what SUT sends?      → Spy/Mock
+Need simplified but working impl?   → Fake
+```
+
+### Examples
+
+```typescript
+// Dummy - just fills the parameter
+const dummyLogger = {} as Logger;
+new Service(dummyLogger);
+
+// Stub - returns controlled value
+const stubRepo = { findById: () => ({ id: 1, name: 'Test' }) };
+
+// Spy - records calls
+const sendEmailSpy = vi.fn();
+service.notify(user);
+expect(sendEmailSpy).toHaveBeenCalledWith(user.email);
+
+// Fake - simplified working implementation
+const fakeDb = new Map<string, User>();
+const fakeRepo = {
+  save: (u: User) => fakeDb.set(u.id, u),
+  findById: (id: string) => fakeDb.get(id),
+};
+```
+
+---
+
+## Test Shapes
+
+| Shape | Ratio (Unit:Integration:E2E) | When to Use |
+|-------|------------------------------|-------------|
+| **Pyramid** | 70:20:10 | Traditional, most projects |
+| **Trophy** | 20:60:20 | Integration-heavy (APIs, DBs) |
+| **Diamond** | 10:70:20 | Microservices, heavy I/O |
+
+**Default to Pyramid** unless project characteristics suggest otherwise.
 
 ---
 
 ## Test Naming
 
-### Pattern: `it('should <expected behavior> when <condition>')`
+### Pattern: `it('should <behavior> when <condition>')`
 
 ✅ CORRECT:
 ```typescript
@@ -45,9 +117,7 @@ it('handles error')
 
 ---
 
-## Test Structure
-
-### AAA Pattern: Arrange, Act, Assert
+## Test Structure: AAA Pattern
 
 ```typescript
 it('calculates total correctly', () => {
@@ -62,32 +132,53 @@ it('calculates total correctly', () => {
 });
 ```
 
-### Describe Blocks
+---
+
+## Property-Based Testing
+
+Use when inputs have broad ranges or complex constraints.
 
 ```typescript
-describe('UserService', () => {
-  describe('createUser', () => {
-    it('creates user with valid data', () => { ... });
-    it('throws when email already exists', () => { ... });
-    it('hashes password before storing', () => { ... });
-  });
+import { fc } from 'fast-check';
 
-  describe('deleteUser', () => {
-    it('removes user from database', () => { ... });
-    it('throws when user not found', () => { ... });
-  });
+// Property: sorting is idempotent
+it('sort(sort(arr)) === sort(arr)', () => {
+  fc.assert(
+    fc.property(fc.array(fc.integer()), (arr) => {
+      const sorted = sort(arr);
+      expect(sort(sorted)).toEqual(sorted);
+    })
+  );
+});
+
+// Property: reverse is its own inverse
+it('reverse(reverse(arr)) === arr', () => {
+  fc.assert(
+    fc.property(fc.array(fc.anything()), (arr) => {
+      expect(reverse(reverse(arr))).toEqual(arr);
+    })
+  );
 });
 ```
 
+**When to use property-based:**
+- Mathematical operations
+- Serialization/deserialization
+- Sorting/filtering
+- Any function with invariants
+
 ---
 
-## Contrastive Exemplars
+## Assertion Strength
 
-### Strong Assertions
+| Strength | Example | Use When |
+|----------|---------|----------|
+| **Strong** | `expect(x).toBe(42)` | Exact value known |
+| **Medium** | `expect(x).toMatchObject({...})` | Partial match needed |
+| **Weak** | `expect(x).toBeDefined()` | AVOID - rarely useful |
 
 ✅ CORRECT:
 ```typescript
-// Assert specific values
 expect(result).toBe(30);
 expect(user.email).toBe('test@example.com');
 expect(items).toHaveLength(3);
@@ -95,42 +186,30 @@ expect(items).toHaveLength(3);
 
 ❌ FAIL:
 ```typescript
-// Weak assertions that miss bugs
-expect(result).toBeDefined();
-expect(user).toBeTruthy();
-expect(items.length).toBeGreaterThan(0);
+expect(result).toBeDefined();    // Misses wrong values
+expect(user).toBeTruthy();       // Misses structure issues
+expect(items.length).toBeGreaterThan(0);  // Misses exact count
 ```
 
-### Edge Cases
+---
 
-✅ CORRECT:
+## Boundary Testing
+
+Always test boundaries for numeric/range logic:
+
 ```typescript
 describe('validateAge', () => {
-  it('accepts age 18', () => {
-    expect(validateAge(18)).toBe(true);
-  });
+  // Boundary: exactly at threshold
+  it('accepts age 18', () => expect(validateAge(18)).toBe(true));
 
-  it('rejects age 17', () => {
-    expect(validateAge(17)).toBe(false);
-  });
+  // Boundary: just below threshold
+  it('rejects age 17', () => expect(validateAge(17)).toBe(false));
 
-  it('rejects negative age', () => {
-    expect(validateAge(-1)).toBe(false);
-  });
+  // Edge: negative
+  it('rejects negative age', () => expect(validateAge(-1)).toBe(false));
 
-  it('rejects non-integer age', () => {
-    expect(validateAge(18.5)).toBe(false);
-  });
-});
-```
-
-❌ FAIL:
-```typescript
-describe('validateAge', () => {
-  it('validates age', () => {
-    expect(validateAge(25)).toBe(true);
-    // Missing boundary tests!
-  });
+  // Edge: non-integer
+  it('rejects non-integer', () => expect(validateAge(18.5)).toBe(false));
 });
 ```
 
@@ -146,49 +225,15 @@ describe('validateAge', () => {
 
 ---
 
-## Mutation Testing Basics
-
-Traditional coverage: "Did this line run?"
-Mutation testing: "Would tests catch a bug here?"
-
-### Example
-
-```typescript
-// Original
-function isAdult(age: number): boolean {
-  return age >= 18;
-}
-
-// Mutant: age > 18 (changed >= to >)
-// If tests pass with mutant, they're weak!
-```
-
-### Fix Weak Tests
-
-```typescript
-// Before: passes with mutant
-it('returns true for adult', () => {
-  expect(isAdult(25)).toBe(true);
-});
-
-// After: catches mutant
-it('returns true for exactly 18', () => {
-  expect(isAdult(18)).toBe(true);
-});
-
-it('returns false for 17', () => {
-  expect(isAdult(17)).toBe(false);
-});
-```
-
----
-
 ## Anti-Patterns
 
 | Pattern | Status | Reason |
 |---------|--------|--------|
 | Test without assertions | FORBIDDEN | 0% bug detection |
 | `expect(x).toBeDefined()` only | FORBIDDEN | Misses value bugs |
-| Hardcoded test data | CAUTION | Use factories |
-| Testing implementation | FORBIDDEN | Test behavior |
-| Skipped tests (`it.skip`) | FORBIDDEN | Fix or delete |
+| Testing implementation details | FORBIDDEN | Test behavior |
+| `it.skip` / `it.todo` left in | FORBIDDEN | Fix or delete |
+| Hardcoded dates/times | FORBIDDEN | Flaky tests |
+| `sleep()` / `setTimeout` in tests | FORBIDDEN | Use async utilities |
+| Shared mutable state | FORBIDDEN | Test isolation |
+| Over-mocking | CAUTION | Test real behavior when possible |

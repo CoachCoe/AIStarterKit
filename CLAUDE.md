@@ -242,6 +242,7 @@ Domain-specific knowledge in `.claude/skills/`:
 | `upgradeable-contracts.md` | OpenZeppelin UUPS patterns | upgradeable, proxy, UUPS |
 | `deploy-contracts/` | Contract deployment workflow | deploy, deployment, mainnet |
 | `deploy-frontend/` | Bulletin Chain + DotNS deployment | deploy frontend, dotns, bulletin |
+| `dotli/` | dot.li universal resolver ("fourth host") | dot.li, smoldot, helia, link sharing |
 | `host-api.md` | Triangle/Host API (early-stage) | host api, triangle, product sdk |
 | `foundry-testing/` | Foundry/Solidity test patterns | forge test, solidity test |
 | `mutation-testing/` | Stryker mutation testing | mutation, stryker, test quality |

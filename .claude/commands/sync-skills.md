@@ -20,6 +20,7 @@ See `.claude/SOURCES.md` for:
 mkdir -p ~/polkadot-refs && cd ~/polkadot-refs
 git clone https://github.com/paritytech/product-infrastructure.git
 git clone https://github.com/paritytech/dotns-sdk.git
+git clone https://github.com/paritytech/dotli.git
 git clone https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering.git
 
 # Update all (subsequent times)
@@ -44,6 +45,7 @@ done
 |------|----------|
 | product-infrastructure | Previewnet changes, new endpoints |
 | dotns-sdk | CLI command changes, new features |
+| dotli | Config updates, peer changes, new resolution patterns |
 | Agent-Skills-for-Context-Engineering | New skill patterns, improvements |
 
 ## Update Workflow

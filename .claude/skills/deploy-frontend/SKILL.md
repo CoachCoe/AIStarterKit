@@ -144,9 +144,12 @@ bun run src/cli/index.ts content view <domain-name>
 ```
 
 **Access your site:**
+- **dot.li (recommended):** `https://<domain-name>.dot.li/` (client-side resolution, no proxy)
 - Paseo gateway: `https://<domain-name>.paseo.li/`
 - IPFS gateway: `https://ipfs.io/ipfs/<cid>`
 - dweb.link: `https://dweb.link/ipfs/<cid>`
+
+**See also:** `dotli.md` skill for understanding client-side resolution architecture.
 
 ## Vite Configuration
 
