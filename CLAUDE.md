@@ -155,6 +155,7 @@ contract MyContract is Initializable, UUPSUpgradeable {
 - **Conventional commits**: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`
 - **Branch naming**: `feat/feature-name`, `fix/bug-description`
 - **No direct commits to main**
+- **No `Co-Authored-By` lines** — triggers CLA bot checks on GitHub PRs
 
 ---
 
