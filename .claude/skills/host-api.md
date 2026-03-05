@@ -36,21 +36,28 @@ The Polkadot Triangle consists of three hosts that run sandboxed Products:
 ## Core Packages
 
 ```bash
-# Install the SDK packages
-pnpm add @novasamatech/host-api
-pnpm add @novasamatech/host-container
-pnpm add @novasamatech/product-sdk
-pnpm add @novasamatech/host-papp
-pnpm add @novasamatech/host-papp-react-ui
+# Install the SDK packages (use matching versions)
+pnpm add @novasamatech/host-api@0.6.6-1
+pnpm add @novasamatech/product-sdk@0.6.6-1
 ```
 
 | Package | Purpose |
 |---------|---------|
-| `@novasamatech/host-api` | Protocol, types, error definitions |
-| `@novasamatech/host-container` | Host-side: manage embedded dapps |
-| `@novasamatech/product-sdk` | Embedded-side: SDK for dapps in iframes |
-| `@novasamatech/host-papp` | Polkadot mobile app authentication |
-| `@novasamatech/host-papp-react-ui` | React components for Papp auth UI |
+| `@novasamatech/host-api` | Protocol, types, error definitions, `toHex` utility |
+| `@novasamatech/product-sdk` | Embedded-side SDK with providers and account management |
+
+### Key SDK Exports
+
+```typescript
+import {
+  sandboxProvider,      // Environment detection
+  metaProvider,         // Host connection status
+  createAccountsProvider, // Account management
+  hostApi,              // Host API instance
+} from "@novasamatech/product-sdk";
+
+import { toHex } from "@novasamatech/host-api";
+```
 
 ## Architecture Overview
 
@@ -74,6 +81,80 @@ pnpm add @novasamatech/host-papp-react-ui
 │  └───────────────────────────────────┘  │
 └─────────────────────────────────────────┘
 ```
+
+## Implementation Patterns
+
+### Environment Detection
+
+```typescript
+// lib/host/detect.ts
+import { sandboxProvider, metaProvider } from "@novasamatech/product-sdk";
+
+let connectionStatus: "disconnected" | "connecting" | "connected" = "disconnected";
+
+// Subscribe to connection status (run once at module load)
+if (typeof window !== "undefined" && sandboxProvider.isCorrectEnvironment()) {
+  metaProvider.subscribeConnectionStatus((status) => {
+    connectionStatus = status;
+  });
+}
+
+export function isHosted(): boolean {
+  if (typeof window === "undefined") return false;
+  return sandboxProvider.isCorrectEnvironment();
+}
+
+export function isHostConnected(): boolean {
+  return connectionStatus === "connected";
+}
+```
+
+### Account Management
+
+```typescript
+import { createAccountsProvider, metaProvider } from "@novasamatech/product-sdk";
+
+const accountsProvider = createAccountsProvider();
+
+// Method 1: Get non-product accounts (works without product registration)
+const result = await accountsProvider.getNonProductAccounts();
+result.match(
+  (accounts) => {
+    if (accounts.length > 0) {
+      const { publicKey, name } = accounts[0];
+      // Use account...
+    }
+  },
+  (error) => console.error(error)
+);
+
+// Method 2: Get product-specific account (requires user sign-in)
+const result = await accountsProvider.getProductAccount("my-domain", 0);
+result.match(
+  (acc) => {
+    // acc.publicKey: Uint8Array
+    // acc.name: string | undefined
+  },
+  (error) => {
+    // User may need to sign in to Triangle Host
+  }
+);
+```
+
+### Connection Status Flow
+
+1. **Meta connection** (`metaProvider.subscribeConnectionStatus`) - Host <-> Product communication
+2. **Account connection** (`accountsProvider.subscribeAccountConnectionStatus`) - Account availability
+
+**Important:** User must **sign in to Triangle Host** for accounts to be available. If `getNonProductAccounts()` returns 0 accounts, the user needs to sign in first.
+
+### Known Issues
+
+| Issue | Cause | Workaround |
+|-------|-------|------------|
+| `getProductAccount` hangs | User not signed in | Check `getNonProductAccounts()` first |
+| 0 accounts returned | User not signed in to Host | Show "Sign in to Triangle" message |
+| People Chain WebSocket fails | Previewnet infrastructure | Wait/retry, report to Triangle team |
 
 ## Key Concepts
 

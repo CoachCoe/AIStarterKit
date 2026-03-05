@@ -108,6 +108,7 @@ bun run src/cli/index.ts register domain \
 
 **Domain naming rules:**
 - `myapp` → `myapp.dot`
+- `my-app` → `my-app.dot` (hyphens allowed)
 - Reserved names (≤5 chars) require `--governance` flag
 
 ### Step 4: Upload to Bulletin Chain

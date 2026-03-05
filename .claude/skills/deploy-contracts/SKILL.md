@@ -23,12 +23,13 @@ description: "Deploy smart contracts to Polkadot Asset Hub. Triggers: deploy, de
 
 ## Network Configuration
 
-| Network | RPC | Use Case |
-|---------|-----|----------|
-| Previewnet | https://previewnet.substrate.dev/eth-rpc | Development (no faucet needed) |
-| Paseo Testnet | https://paseo-asset-hub-eth-rpc.polkadot.io | Integration testing |
-| Polkadot Mainnet | https://polkadot-asset-hub-eth-rpc.polkadot.io | Production |
-| Local Anvil | http://127.0.0.1:8545 | Unit tests |
+| Network | RPC | Chain ID | Use Case |
+|---------|-----|----------|----------|
+| Polkadot Hub TestNet | https://eth-rpc-testnet.polkadot.io | 420420417 | Integration testing |
+| Polkadot Mainnet | https://polkadot-asset-hub-eth-rpc.polkadot.io | TBD | Production |
+| Local Hardhat/Anvil | http://127.0.0.1:8545 | 31337 | Unit tests |
+
+**Note:** The TestNet is also called "Paseo Asset Hub" or "Polkadot Hub TestNet".
 
 ## Deployment Workflow
 
@@ -140,14 +141,71 @@ MyContract(proxyAddress).upgradeToAndCall(
 );
 ```
 
+## Hardhat Deployment (PolkaVM)
+
+For projects using Hardhat with `@parity/hardhat-polkadot` for PolkaVM compilation:
+
+### Hardhat Config for PolkaVM
+
+```typescript
+// hardhat.config.ts
+networks: {
+  paseo: {
+    url: process.env.PASEO_RPC_URL || 'https://eth-rpc-testnet.polkadot.io',
+    chainId: 420420417,
+    accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+    polkadot: {
+      target: 'pvm',  // Required for PolkaVM
+    },
+  },
+},
+resolc: {
+  compilerSource: 'binary',
+  settings: {
+    resolcPath: './bin/resolc',
+  },
+},
+```
+
+### Verify PolkaVM Compilation
+
+Check that artifacts have PVM bytecode (starts with `0x50564d00`):
+```bash
+cat artifacts/contracts/MyContract.sol/MyContract.json | jq -r '.bytecode' | head -c 20
+# Should output: 0x50564d0000...
+```
+
 ## Common Issues
 
 | Issue | Solution |
 |-------|----------|
-| Transaction underpriced | `--with-gas-price 1000000000` |
-| Nonce too low | Use `--slow` flag |
-| Out of gas | Increase gas limit in script |
-| Signature invalid | Check PRIVATE_KEY format (with 0x) |
+| Transaction is temporarily banned | Use ethers directly with explicit gas params (see below) |
+| Transaction underpriced | Set explicit `gasPrice: feeData.gasPrice * 2n` |
+| Nonce too low | Use `--slow` flag or wait and retry |
+| Out of gas | Increase gas limit: `gasLimit: 10_000_000n` |
+| Signature invalid | Check PRIVATE_KEY format (with 0x prefix) |
+
+### "Transaction is temporarily banned" Workaround
+
+If deployment fails with this error, deploy using ethers directly:
+
+```typescript
+import { ethers } from 'ethers';
+import fs from 'fs';
+
+const provider = new ethers.JsonRpcProvider('https://eth-rpc-testnet.polkadot.io');
+const wallet = new ethers.Wallet(PRIVATE_KEY, provider);
+const artifact = JSON.parse(fs.readFileSync('./artifacts/.../MyContract.json', 'utf8'));
+const feeData = await provider.getFeeData();
+
+const tx = await wallet.sendTransaction({
+  data: artifact.bytecode,
+  gasLimit: 10_000_000n,
+  gasPrice: feeData.gasPrice ? feeData.gasPrice * 2n : 1000000000n,
+});
+const receipt = await tx.wait();
+console.log('Contract deployed at:', receipt?.contractAddress);
+```
 
 ## Foundry.toml Configuration
 
