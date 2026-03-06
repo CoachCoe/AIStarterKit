@@ -257,6 +257,7 @@ pnpm test              # Must pass
 | Deploy to mainnet first | Costly mistakes | Paseo testnet first |
 | Commit `.env` | Secret exposure | Use `.gitignore` |
 | `console.log` in contracts | Gas waste | Remove before deploy |
+| `Co-Authored-By` in commits | Triggers CLA bot failures on PRs | Omit co-author lines entirely |
 
 ---
 
@@ -265,3 +266,16 @@ pnpm test              # Must pass
 - **Architecture**: See `CLAUDE.md` in project root
 - **Domain Knowledge**: See `.claude/skills/`
 - **Network Config**: See `asset-hub-evm.md` skill
+
+---
+
+## Learnings
+
+> Append corrections and discoveries here as they occur. Format: `[YYYY-MM-DD] Category: Learning`
+
+| Date | Category | Learning |
+|------|----------|----------|
+| 2025-03-06 | Git | Never include `Co-Authored-By` lines - triggers CLA bot on GitHub PRs |
+| 2025-03-06 | Skills | All skills must have Anti-Patterns section for consistency |
+| 2025-03-06 | Documentation | SOURCES.md must map ALL skills to upstream references |
+| — | — | Add new learnings above this line |

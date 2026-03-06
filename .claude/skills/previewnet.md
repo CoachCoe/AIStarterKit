@@ -134,3 +134,14 @@ Connect directly via Polkadot.js Apps:
 | Public visibility | Limited | Full |
 | Token value | None | None (testnet) |
 | Network stability | Dev-grade | Production-grade |
+
+## Anti-Patterns (FORBIDDEN)
+
+| Pattern | Why Forbidden | Instead |
+|---------|---------------|---------|
+| Skip previewnet, deploy to Paseo first | Wastes faucet tokens, slower iteration | MUST use previewnet for initial development |
+| Hardcode previewnet endpoints | URLs may change | MUST use foundry.toml rpc_endpoints |
+| Use mainnet keys on previewnet | Security risk if keys leak | MUST use dev account keys (Alice, Bob) |
+| Assume state persists | Previewnet is ephemeral | MUST expect resets, deploy fresh |
+| Deploy without `--slow` | Nonce issues on Asset Hub | MUST always use `--slow` flag |
+| Test only on previewnet | Different from production | MUST also test on Paseo before mainnet |

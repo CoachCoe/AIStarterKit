@@ -114,3 +114,16 @@ For integration tests that need real Asset Hub state:
 // Fork Paseo for testing
 vm.createSelectFork("paseo");
 ```
+
+## Anti-Patterns (FORBIDDEN)
+
+| Pattern | Why Forbidden | Instead |
+|---------|---------------|---------|
+| Use Moonbeam | Not our target chain | MUST use Asset Hub EVM |
+| Deploy without `--slow` | Nonce issues on Asset Hub | MUST always include `--slow` flag |
+| Hardcode RPC URLs in scripts | Not portable across environments | MUST use foundry.toml rpc_endpoints |
+| Skip Previewnet | Wastes testnet tokens | MUST test on Previewnet first |
+| Use Etherscan verification | Not supported on Asset Hub | MUST publish source manually |
+| Deploy to mainnet without Paseo test | Production risk | MUST validate on Paseo first |
+| Commit `.env` file | Exposes private keys | MUST use `.gitignore` |
+| Use ETH terminology in UI | Confuses Polkadot users | MUST use DOT for native token |

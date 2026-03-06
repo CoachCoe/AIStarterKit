@@ -251,4 +251,6 @@ Domain-specific knowledge in `.claude/skills/`:
 
 **Usage**: Load relevant skills before implementing features in that domain.
 
+**Keeping Skills Updated**: Skills are sourced from reference repositories (Parity, community). Check `.claude/SOURCES.md` for upstream repos and run `/sync-skills` periodically—weekly during active development or before major releases.
+
 For agent operational constraints, see `.claude/AGENTS.md`.

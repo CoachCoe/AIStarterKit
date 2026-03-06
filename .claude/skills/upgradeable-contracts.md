@@ -145,3 +145,16 @@ MyContract(proxyAddress).upgradeToAndCall(
 4. **Missing `_disableInitializers()`**: Security vulnerability
 5. **Storage collisions**: Always append, never insert or remove
 6. **Initializing in wrong order**: Match inheritance order
+
+## Anti-Patterns (FORBIDDEN)
+
+| Pattern | Why Forbidden | Instead |
+|---------|---------------|---------|
+| Initialize in constructor | Proxy won't receive initialization | MUST use `initializer` modifier |
+| Skip `_disableInitializers()` | Implementation can be hijacked | MUST disable in constructor |
+| Remove/reorder state variables | Storage layout collision | MUST only append new variables |
+| Use `Ownable` for upgrades | Single point of failure | MUST use `AccessControl` with roles |
+| Deploy implementation directly | Bypasses proxy pattern | MUST deploy via ERC1967Proxy |
+| Forget `__gap` in base contracts | Blocks future upgrades | MUST reserve 50 storage slots |
+| Skip parent `__X_init()` calls | Uninitialized state | MUST call ALL parent initializers |
+| Use `delegatecall` manually | Storage corruption risk | MUST use UUPS upgrade mechanism |

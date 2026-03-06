@@ -10,6 +10,10 @@ This file documents the reference repositories that skills in this starter kit a
 | dotns-sdk | https://github.com/paritytech/dotns-sdk | DotNS CLI usage, Bulletin deployment |
 | dotli | https://github.com/paritytech/dotli | Client-side resolution, Smoldot+Helia patterns |
 | Agent-Skills-for-Context-Engineering | https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering | Skill structure, best practices |
+| triangle-web-host-demo | https://github.com/nicosantangelo/triangle-web-host-demo | Host API patterns, Triangle SDK |
+| OpenZeppelin Docs | https://docs.openzeppelin.com/contracts | UUPS proxy patterns, upgradeability |
+| Foundry Book | https://book.getfoundry.sh | Test patterns, cheatcodes, scripting |
+| Stryker Docs | https://stryker-mutator.io/docs | Mutation testing configuration |
 
 ## Checking for Updates
 
@@ -65,6 +69,10 @@ done
 | `code-quality.md` | Agent-Skills-for-Context-Engineering | Quality patterns |
 | `testing.md` | Agent-Skills-for-Context-Engineering | Test patterns |
 | `security.md` | Agent-Skills-for-Context-Engineering | Security patterns |
+| `upgradeable-contracts.md` | OpenZeppelin docs | UUPS patterns, proxy deployment |
+| `foundry-testing/` | Foundry Book | Test patterns, cheatcodes |
+| `mutation-testing/` | Stryker docs | Mutation testing patterns |
+| `host-api.md` | triangle-web-host-demo | Host API, Triangle SDK |
 
 ## When to Sync
 
