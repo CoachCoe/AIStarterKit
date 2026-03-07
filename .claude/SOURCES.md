@@ -72,7 +72,14 @@ done
 | `upgradeable-contracts.md` | OpenZeppelin docs | UUPS patterns, proxy deployment |
 | `foundry-testing/` | Foundry Book | Test patterns, cheatcodes |
 | `mutation-testing/` | Stryker docs | Mutation testing patterns |
-| `host-api.md` | triangle-web-host-demo | Host API, Triangle SDK |
+| `host-api.md` | triangle-web-host-demo | Host API overview, skill index |
+| `triangle/OVERVIEW.md` | triangle-web-host-demo | Architecture, concepts |
+| `triangle/spektr-manager.md` | triangle-web-host-demo | SpektrManager patterns |
+| `triangle/authentication.md` | triangle-web-host-demo | Wallet auth (Papp + Extensions) |
+| `triangle/dotns-resolution.md` | triangle-web-host-demo | Domain resolution |
+| `triangle/service-worker.md` | triangle-web-host-demo | SW caching patterns |
+| `triangle/product-sdk.md` | triangle-web-host-demo | Product SDK usage |
+| `triangle/static-export.md` | triangle-web-host-demo | Static export requirements |
 
 ## When to Sync
 

@@ -19,7 +19,7 @@ Before implementation work, check `.claude/skills/` for relevant domain knowledg
 | Upgradeable contracts | `upgradeable-contracts.md` |
 | Contract deployment | `deploy-contracts/` |
 | Frontend deployment | `deploy-frontend/` |
-| Host API / Triangle | `host-api.md` (early-stage) |
+| Host API / Triangle | `host-api.md`, `triangle/` skills |
 | Solidity testing | `foundry-testing/` |
 | TypeScript testing | `testing.md` |
 | Code quality | `code-quality.md` |
