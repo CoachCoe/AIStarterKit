@@ -68,18 +68,35 @@ bun run src/cli/index.ts bulletin authorize <your-substrate-address> -m "$DOTNS_
 ## Authentication Methods
 
 ```bash
-# Option 1: Mnemonic (direct)
+# Option 1: p1p (recommended - decentralized secret storage)
+# Requires: p1p CLI installed and signed in (p1p signin --mnemonic)
+export DOTNS_MNEMONIC=$(p1p read "p1p://<locker>/dotns/customFields.mnemonic" -n)
+# Then use: -m "$DOTNS_MNEMONIC"
+
+# Option 2: Mnemonic (direct)
 --mnemonic "your 12 word mnemonic here"
 # or
 -m "$DOTNS_MNEMONIC"
 
-# Option 2: Keystore (recommended for repeated use)
+# Option 3: Keystore (for repeated use)
 export DOTNS_KEYSTORE_PATH=~/.dotns/keystore
 export DOTNS_KEYSTORE_PASSWORD=your-password
 dotns auth set --account default --mnemonic "your 12 words..."
 
-# Option 3: Dev key URI (testing only - Previewnet)
+# Option 4: Dev key URI (testing only - Previewnet)
 --key-uri //Alice
+```
+
+**p1p Setup (one-time):**
+```bash
+# Sign in to p1p
+p1p signin --mnemonic
+
+# Store your dotns mnemonic
+p1p locker create -n "my-deployment"
+p1p item create -l "my-deployment" -t "dotns" \
+  --category custom \
+  --field mnemonic="your 12 word mnemonic"
 ```
 
 ## Deployment Workflow
@@ -169,7 +186,10 @@ export default defineConfig({
 ## Environment Variables
 
 ```bash
-# Add to .env (NEVER COMMIT)
+# Option A: Use p1p (recommended - no .env file needed)
+export DOTNS_MNEMONIC=$(p1p read "p1p://<locker>/dotns/customFields.mnemonic" -n)
+
+# Option B: Add to .env (NEVER COMMIT)
 DOTNS_MNEMONIC="your 12 word mnemonic"
 
 # Optional
@@ -209,6 +229,7 @@ bun run src/cli/index.ts lookup name <domain-name>
 
 | Pattern | Status | Reason |
 |---------|--------|--------|
+| Register new domain without explicit request | FORBIDDEN | Only register domains when user explicitly asks |
 | Skip PoP setup | FORBIDDEN | Domain registration will fail |
 | Skip Bulletin authorization | FORBIDDEN | Upload will fail |
 | Commit mnemonic to git | FORBIDDEN | Security risk |

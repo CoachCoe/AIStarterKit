@@ -23,7 +23,7 @@ DotNS contracts are deployed on **multiple chains**, and domains may be register
 
 ```typescript
 // lib/dotns/constants.ts
-export const PASEO_ASSET_HUB_EVM_RPC = 'https://services.polkadothub-rpc.com/testnet';
+export const PASEO_ASSET_HUB_EVM_RPC = 'https://paseo-asset-hub-eth-rpc.polkadot.io';
 export const PASEO_ASSET_HUB_RESOLVER = '0x7756DF72CBc7f062e7403cD59e45fBc78bed1cD7';
 
 export const DOTNS_CONTENT_RESOLVER_ABI = [

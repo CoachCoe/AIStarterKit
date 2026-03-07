@@ -25,6 +25,9 @@ A production-ready Claude Code configuration for building on Polkadot Asset Hub 
 | [Foundry](https://book.getfoundry.sh) | `curl -L https://foundry.paradigm.xyz \| bash` | Solidity development |
 | [pnpm](https://pnpm.io) | `npm install -g pnpm` | Package management |
 | [Bun](https://bun.sh) | `curl -fsSL https://bun.sh/install \| bash` | For dotNS CLI |
+| [Node.js 22+](https://nodejs.org) | `fnm install 22` | Required for dotns WebSocket |
+| [p1p CLI](https://github.com/paritytech/polkadot-1p) | See `cli-setup.md` | Secret management |
+| [dotns CLI](https://github.com/paritytech/dotns-sdk) | See `cli-setup.md` | Frontend deployment |
 
 ### Your Journey (Zero to Deployed)
 
@@ -101,6 +104,32 @@ forge install OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
 
 ### 3. Configure Environment
 
+**Option A: Using p1p (Recommended)**
+
+Store secrets in a decentralized locker instead of local files:
+
+```bash
+# Install p1p CLI (see cli-setup.md for full instructions)
+cd ~/polkadot-1p && pnpm install && pnpm -F @locker/cli build
+cd packages/cli && npm link
+
+# Sign in and create locker
+p1p signin --mnemonic
+p1p locker create -n "my-project"
+
+# Store secrets
+p1p item create -l "my-project" -t "contracts" \
+  --category custom \
+  --field private_key="0x..." \
+  --field deployer_address="0x..."
+
+# Copy .env.p1p.example to your project
+cp .env.p1p.example .env.p1p
+# Edit .env.p1p to use your locker name
+```
+
+**Option B: Using .env (Traditional)**
+
 ```bash
 # Create .env (never commit this!)
 cat > .env << 'EOF'
@@ -119,6 +148,9 @@ EOF
 ├── SOURCES.md                     # Reference repos for skill updates
 ├── settings.local.json            # Permissions
 ├── skills/
+│   ├── cli-setup.md               # Install p1p + dotns CLIs
+│   ├── locker-structure.md        # p1p secret organization
+│   ├── end-to-end-deployment.md   # Full deployment guide
 │   ├── code-quality.md            # Minimal code philosophy
 │   ├── testing.md                 # Test patterns (TypeScript)
 │   ├── security.md                # Security baseline
@@ -127,12 +159,14 @@ EOF
 │   ├── upgradeable-contracts.md   # OpenZeppelin UUPS patterns
 │   ├── deploy-contracts/          # Contract deployment
 │   ├── deploy-frontend/           # Bulletin + DotNS deployment
+│   ├── p1p-secrets/               # Secret management
 │   ├── foundry-testing/           # Solidity test patterns
 │   ├── mutation-testing/          # Stryker mutation testing
 │   └── skill-creator/             # Create new skills
 └── commands/
     └── sync-skills.md             # Skill sync workflow
 
+.env.p1p.example                   # Template for p1p secrets
 CLAUDE.md                          # Project architecture template
 ```
 
@@ -167,6 +201,14 @@ Local Anvil → Previewnet → Paseo → Mainnet
 
 ## Skills Reference
 
+### Getting Started
+
+| Skill | Use When |
+|-------|----------|
+| `cli-setup.md` | Installing p1p and dotns CLIs |
+| `locker-structure.md` | Setting up p1p secrets for your project |
+| `end-to-end-deployment.md` | Full deployment walkthrough (zero to mainnet) |
+
 ### Polkadot-Specific
 
 | Skill | Use When |
@@ -176,6 +218,7 @@ Local Anvil → Previewnet → Paseo → Mainnet
 | `upgradeable-contracts.md` | UUPS proxy patterns, storage layout |
 | `deploy-contracts/` | Contract deployment workflow |
 | `deploy-frontend/` | Bulletin Chain + DotNS (requires PoP setup) |
+| `p1p-secrets/` | Secret management with p1p CLI |
 | `host-api.md` | Triangle/Host API (early-stage, evolving) |
 | `foundry-testing/` | Writing Solidity tests |
 
@@ -238,6 +281,14 @@ forge script script/Deploy.s.sol \
 ### 3. Paseo Testnet (Integration Testing)
 
 ```bash
+# Option A: Using p1p (recommended)
+p1p run --env-file .env.p1p -- forge script script/Deploy.s.sol \
+  --rpc-url paseo \
+  --broadcast \
+  --slow \
+  -vvvv
+
+# Option B: Using .env
 source .env
 forge script script/Deploy.s.sol \
   --rpc-url paseo \
@@ -249,6 +300,14 @@ forge script script/Deploy.s.sol \
 ### 4. Mainnet (Production)
 
 ```bash
+# Option A: Using p1p (recommended)
+p1p run --env-file .env.p1p -- forge script script/Deploy.s.sol \
+  --rpc-url polkadot \
+  --broadcast \
+  --slow \
+  -vvvv
+
+# Option B: Using .env
 source .env
 forge script script/Deploy.s.sol \
   --rpc-url polkadot \
@@ -266,6 +325,9 @@ Deploy your frontend to Polkadot's decentralized infrastructure with a `.dot` do
 ```bash
 cd /path/to/dotns-sdk/packages/cli
 
+# Get mnemonic from p1p (or use $DOTNS_MNEMONIC if set manually)
+export DOTNS_MNEMONIC=$(p1p read "p1p://my-project/dotns/customFields.mnemonic" -n)
+
 # 1. Set Personhood (REQUIRED - cannot skip)
 bun run src/cli/index.ts pop set lite -m "$DOTNS_MNEMONIC"
 
@@ -279,6 +341,9 @@ bun run src/cli/index.ts bulletin authorize <your-address> -m "$DOTNS_MNEMONIC"
 # Build (ensure vite.config.ts has base: './')
 pnpm build
 
+# Get mnemonic from p1p
+export DOTNS_MNEMONIC=$(p1p read "p1p://my-project/dotns/customFields.mnemonic" -n)
+
 # Upload to Bulletin
 bun run src/cli/index.ts bulletin upload ./dist --parallel --print-contenthash -m "$DOTNS_MNEMONIC"
 
@@ -286,7 +351,7 @@ bun run src/cli/index.ts bulletin upload ./dist --parallel --print-contenthash -
 bun run src/cli/index.ts content set <domain-name> <cid> -m "$DOTNS_MNEMONIC"
 ```
 
-See `deploy-frontend/` skill for full details.
+See `deploy-frontend/` skill for full details and `p1p-secrets/` for secret management.
 
 ## Example Project Structure (pnpm Monorepo)
 
@@ -349,8 +414,9 @@ for repo in */; do git -C "$repo" pull; done
 
 ### Reference Repositories
 
+- [paritytech/polkadot-1p](https://github.com/paritytech/polkadot-1p) - p1p CLI, decentralized secret management
+- [paritytech/dotns-sdk](https://github.com/paritytech/dotns-sdk) - DotNS CLI, Bulletin Chain uploads
 - [paritytech/product-infrastructure](https://github.com/paritytech/product-infrastructure) - Previewnet, deployment
-- [paritytech/dotns-sdk](https://github.com/paritytech/dotns-sdk) - DotNS CLI, Bulletin
 - [Agent-Skills-for-Context-Engineering](https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering) - Skill patterns
 
 ## License

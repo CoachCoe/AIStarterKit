@@ -235,6 +235,9 @@ Domain-specific knowledge in `.claude/skills/`:
 
 | Skill | Purpose | Triggers |
 |-------|---------|----------|
+| `cli-setup.md` | Install p1p + dotns CLIs | install, setup, cli |
+| `locker-structure.md` | p1p locker organization | locker, secrets organization |
+| `end-to-end-deployment.md` | Full deployment guide | full deploy, zero to mainnet |
 | `code-quality.md` | Minimal code philosophy | quality, refactor, YAGNI |
 | `testing.md` | Test patterns (TypeScript) | test, coverage, spec |
 | `security.md` | Security baseline | security, validation, audit |
@@ -243,6 +246,7 @@ Domain-specific knowledge in `.claude/skills/`:
 | `upgradeable-contracts.md` | OpenZeppelin UUPS patterns | upgradeable, proxy, UUPS |
 | `deploy-contracts/` | Contract deployment workflow | deploy, deployment, mainnet |
 | `deploy-frontend/` | Bulletin Chain + DotNS deployment | deploy frontend, dotns, bulletin |
+| `p1p-secrets/` | Secrets management via p1p CLI | p1p, secrets, env vars, credentials |
 | `dotli/` | dot.li universal resolver ("fourth host") | dot.li, smoldot, helia, link sharing |
 | `host-api.md` | Triangle/Host API overview | host api, triangle, product sdk |
 | `triangle/` | Full Triangle skill family | spektr, authentication, dotns, service worker |

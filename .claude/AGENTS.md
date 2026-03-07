@@ -14,6 +14,9 @@ Before implementation work, check `.claude/skills/` for relevant domain knowledg
 
 | Task Domain | Skill to Load |
 |-------------|---------------|
+| CLI setup (p1p, dotns) | `cli-setup.md` |
+| Secret management | `p1p-secrets/`, `locker-structure.md` |
+| Full deployment workflow | `end-to-end-deployment.md` |
 | Local development | `previewnet.md` |
 | Deploying to Asset Hub | `asset-hub-evm.md` |
 | Upgradeable contracts | `upgradeable-contracts.md` |

@@ -6,11 +6,12 @@ This file documents the reference repositories that skills in this starter kit a
 
 | Repository | GitHub URL | What to Check |
 |------------|------------|---------------|
+| polkadot-1p | https://github.com/paritytech/polkadot-1p | p1p CLI, secret management, locker patterns |
 | product-infrastructure | https://github.com/paritytech/product-infrastructure | Previewnet config, deployment patterns |
 | dotns-sdk | https://github.com/paritytech/dotns-sdk | DotNS CLI usage, Bulletin deployment |
 | dotli | https://github.com/paritytech/dotli | Client-side resolution, Smoldot+Helia patterns |
 | Agent-Skills-for-Context-Engineering | https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering | Skill structure, best practices |
-| triangle-web-host-demo | https://github.com/nicosantangelo/triangle-web-host-demo | Host API patterns, Triangle SDK |
+| triangle-web-host-demo | https://github.com/paritytech/triangle-web-host-demo | Host API patterns, Triangle SDK |
 | OpenZeppelin Docs | https://docs.openzeppelin.com/contracts | UUPS proxy patterns, upgradeability |
 | Foundry Book | https://book.getfoundry.sh | Test patterns, cheatcodes, scripting |
 | Stryker Docs | https://stryker-mutator.io/docs | Mutation testing configuration |
@@ -21,14 +22,16 @@ This file documents the reference repositories that skills in this starter kit a
 
 ```bash
 # Clone or update reference repos
-git clone https://github.com/paritytech/product-infrastructure.git
+git clone https://github.com/paritytech/polkadot-1p.git
 git clone https://github.com/paritytech/dotns-sdk.git
+git clone https://github.com/paritytech/product-infrastructure.git
 git clone https://github.com/paritytech/dotli.git
 git clone https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering.git
 
 # Check for updates
-cd product-infrastructure && git pull
+cd polkadot-1p && git pull
 cd ../dotns-sdk && git pull
+cd ../product-infrastructure && git pull
 cd ../dotli && git pull
 cd ../Agent-Skills-for-Context-Engineering && git pull
 ```
@@ -40,8 +43,9 @@ Update local paths in your environment:
 ```bash
 # Add to your shell profile (~/.zshrc or ~/.bashrc)
 export SKILL_REFS=(
-  "$HOME/Documents/dev/product-infrastructure"
+  "$HOME/Documents/dev/polkadot-1p"
   "$HOME/Documents/dev/dotns-sdk"
+  "$HOME/Documents/dev/product-infrastructure"
   "$HOME/Documents/dev/dotli"
   "$HOME/Documents/dev/Agent-Skills-for-Context-Engineering"
 )
@@ -61,6 +65,10 @@ done
 
 | Skill | Primary Source | Files to Watch |
 |-------|----------------|----------------|
+| `cli-setup.md` | polkadot-1p, dotns-sdk | Installation, CLI commands |
+| `locker-structure.md` | polkadot-1p | Locker patterns, item structure |
+| `end-to-end-deployment.md` | All deployment skills | Combined workflow |
+| `p1p-secrets/` | polkadot-1p | CLI commands, session management |
 | `previewnet.md` | product-infrastructure | Previewnet docs, endpoints |
 | `deploy-frontend/` | dotns-sdk | CLI commands, PoP setup |
 | `dotli/` | dotli | src/*, config.ts, README |

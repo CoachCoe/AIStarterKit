@@ -243,8 +243,8 @@ export type PappNetwork = 'previewnet' | 'pop3';
 
 export function getPappConfig(network: PappNetwork) {
   return network === 'previewnet'
-    ? { relayWss: 'wss://previewnet.substrate.dev/relay/alice', ... }
-    : { relayWss: 'wss://pop3-relay-rpc.polkadot.io', ... };
+    ? { relayWss: SS_PREVIEW_STAGE_ENDPOINTS, ... }  // From @novasamatech/host-papp
+    : { relayWss: ['wss://pop3-testnet.parity-lab.parity.io/people'], ... };
 }
 
 // Switch network: remount PappProvider via key={network}

@@ -36,7 +36,11 @@ description: "Deploy smart contracts to Polkadot Asset Hub. Triggers: deploy, de
 ### 1. Pre-deployment Checklist
 
 ```bash
-# Verify environment
+# Option A: Use p1p for secrets (recommended)
+# Requires .env.p1p file with p1p:// URIs
+p1p run --env-file .env.p1p -- forge script script/Deploy.s.sol --rpc-url paseo --broadcast --slow
+
+# Option B: Manual .env
 source .env
 echo "Admin: $ADMIN_ADDRESS"
 echo "Private key set: $([ -n "$PRIVATE_KEY" ] && echo 'yes' || echo 'NO')"
@@ -46,6 +50,26 @@ forge build
 
 # Run tests
 forge test -vvv
+```
+
+**p1p Setup (one-time):**
+```bash
+# Sign in to p1p
+p1p signin --mnemonic
+
+# Store deployment secrets
+p1p locker create -n "my-deployment"
+p1p item create -l "my-deployment" -t "contracts" \
+  --category custom \
+  --field private_key="0x..." \
+  --field deployer_address="0x..."
+
+# Create .env.p1p template (safe to commit)
+cat > .env.p1p << 'EOF'
+PRIVATE_KEY=p1p://my-deployment/contracts/customFields.private_key
+DEPLOYER_ADDRESS=p1p://my-deployment/contracts/customFields.deployer_address
+PASEO_RPC_URL=https://eth-rpc-testnet.polkadot.io
+EOF
 ```
 
 ### 2. Deploy to Local Anvil (Unit Tests)
