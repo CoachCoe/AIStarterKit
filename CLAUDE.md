@@ -66,6 +66,18 @@ project/
 
 We do NOT use Moonbeam. Asset Hub is the native Polkadot solution for EVM contracts.
 
+### Runtime Environment
+
+**Everything built with this starter kit must be designed from the start to work inside the Triangle's sandboxed iframe environment with Host API communication — not direct HTTP/HTTPS.**
+
+Products run inside sandboxed iframes within Triangle hosts (Polkadot Desktop, Polkadot App, Polkadot.com) with no direct network access. All external interactions — chain queries, signing, storage — go through the Host API.
+
+Design implications:
+- No direct `fetch()` calls to external APIs
+- No bundling light clients (host provides chain access)
+- Use `@novasamatech/product-sdk` for environment detection and account management
+- See `.claude/skills/triangle/OVERVIEW.md` for full architecture details
+
 ---
 
 ## Network Configuration
