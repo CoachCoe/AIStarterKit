@@ -1,4 +1,15 @@
+---
+name: triangle-spektr-manager
+description: "Container orchestration for embedded products in Triangle hosts. Triggers: spektr, container, iframe, embed product"
+---
+
 # SpektrManager - Container Orchestration
+
+## When to Activate
+
+- Building a host that embeds third-party products
+- Managing iframe containers for products
+- Implementing account injection to products
 
 ## Context
 

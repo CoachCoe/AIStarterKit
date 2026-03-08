@@ -1,4 +1,15 @@
+---
+name: host-api
+description: "Triangle Host API overview and skill family index. Triggers: host api, triangle, polkadot desktop, spektr"
+---
+
 # Host API & Polkadot Triangle
+
+## When to Activate
+
+- Starting any Triangle/Host development
+- Need to understand the skill family structure
+- Looking for the right Triangle sub-skill to load
 
 ## Context
 
@@ -90,12 +101,63 @@ For working code and detailed patterns, see:
 
 ---
 
+## Getting Started
+
+### Building a Product (dApp that runs in Triangle)
+
+```bash
+# 1. Start from template
+cp -r templates/minimal-host-app my-product
+cd my-product && npm install
+
+# 2. Develop locally
+npm run dev  # localhost:8000
+
+# 3. Build and deploy
+npm run build
+./deploy.sh my-product  # → https://my-product.dot.li
+```
+
+**Load:** `triangle/product-sdk.md` for SDK patterns.
+
+### Building a Host (app that embeds products)
+
+This is advanced. Start by studying the reference implementation:
+- **triangle-web-host-demo** repository
+
+**Load:** `triangle/spektr-manager.md` for container orchestration.
+
+---
+
 ## Anti-Patterns
 
 | Pattern | Status | Reason |
 |---------|--------|--------|
-| Direct HTTP/fetch from product | FORBIDDEN | Sandboxed, will fail |
-| Bundling light client in product | FORBIDDEN | Host provides chain access |
+| Direct HTTP/fetch from product | FORBIDDEN | Sandboxed iframe, will fail silently |
+| Bundling light client in product | FORBIDDEN | Host provides chain access via API |
+| Using `window.ethereum` | FORBIDDEN | Not injected in Triangle |
+| Hardcoding chain endpoints | FORBIDDEN | Must use host's provider |
 | Assuming stable API | RISKY | v0.6 - APIs changing rapidly |
 | Building for all 3 hosts at once | RISKY | Focus on Desktop first |
 | Using `ssr: true` for embedding code | FORBIDDEN | Browser-only APIs |
+| Skipping `triangle/OVERVIEW.md` | RISKY | Miss fundamental architecture |
+| Not checking `isHosted()` | RISKY | Code must work both in and out of host |
+| Assuming accounts exist on load | RISKY | User may not be signed in |
+
+---
+
+## Verification
+
+Before considering Triangle work complete:
+
+```bash
+# Build must succeed
+npm run build
+
+# Output must be static (single HTML or static files)
+ls dist/
+
+# Test in actual host environment
+# - Open in Polkadot Desktop
+# - Or deploy to .dot.li and test there
+```

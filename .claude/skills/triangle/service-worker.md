@@ -1,4 +1,15 @@
+---
+name: triangle-service-worker
+description: "Service worker patterns for caching and serving IPFS content. Triggers: service worker, caching, offline, ipfs serve"
+---
+
 # Triangle Service Worker
+
+## When to Activate
+
+- Building production Triangle host with offline support
+- Implementing IPFS/Bulletin content caching
+- Handling fetch interception for embedded products
 
 ## Context
 

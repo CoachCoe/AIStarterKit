@@ -12,6 +12,7 @@ This file documents the reference repositories that skills in this starter kit a
 | dotli | https://github.com/paritytech/dotli | Client-side resolution, Smoldot+Helia patterns |
 | Agent-Skills-for-Context-Engineering | https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering | Skill structure, best practices |
 | triangle-web-host-demo | https://github.com/paritytech/triangle-web-host-demo | Host API patterns, Triangle SDK |
+| dotli-starter | https://github.com/paritytech/dotli-starter | Minimal Host app template |
 | OpenZeppelin Docs | https://docs.openzeppelin.com/contracts | UUPS proxy patterns, upgradeability |
 | Foundry Book | https://book.getfoundry.sh | Test patterns, cheatcodes, scripting |
 | Stryker Docs | https://stryker-mutator.io/docs | Mutation testing configuration |
@@ -26,6 +27,7 @@ git clone https://github.com/paritytech/polkadot-1p.git
 git clone https://github.com/paritytech/dotns-sdk.git
 git clone https://github.com/paritytech/product-infrastructure.git
 git clone https://github.com/paritytech/dotli.git
+git clone https://github.com/paritytech/dotli-starter.git
 git clone https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering.git
 
 # Check for updates
@@ -33,6 +35,7 @@ cd polkadot-1p && git pull
 cd ../dotns-sdk && git pull
 cd ../product-infrastructure && git pull
 cd ../dotli && git pull
+cd ../dotli-starter && git pull
 cd ../Agent-Skills-for-Context-Engineering && git pull
 ```
 
@@ -47,6 +50,7 @@ export SKILL_REFS=(
   "$HOME/Documents/dev/dotns-sdk"
   "$HOME/Documents/dev/product-infrastructure"
   "$HOME/Documents/dev/dotli"
+  "$HOME/Documents/dev/dotli-starter"
   "$HOME/Documents/dev/Agent-Skills-for-Context-Engineering"
 )
 
@@ -88,6 +92,9 @@ done
 | `triangle/service-worker.md` | triangle-web-host-demo | SW caching patterns |
 | `triangle/product-sdk.md` | triangle-web-host-demo | Product SDK usage |
 | `triangle/static-export.md` | triangle-web-host-demo | Static export requirements |
+| `templates/minimal-host-app/` | dotli-starter | Full starter template (src/, build.mjs, deploy.sh) |
+| `error-handling.md` | Internal | Error patterns for Solidity and TypeScript |
+| `INDEX.md` | Internal | Skill discovery index |
 
 ## When to Sync
 

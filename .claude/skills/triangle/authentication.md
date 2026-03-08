@@ -1,4 +1,15 @@
+---
+name: triangle-authentication
+description: "Unified wallet auth for Triangle hosts (Papp QR + browser extensions). Triggers: wallet auth, papp, extension, sign"
+---
+
 # Triangle Authentication
+
+## When to Activate
+
+- Implementing wallet connection in a Triangle host
+- Supporting both Papp (QR) and browser extension auth
+- Handling signing requests from embedded products
 
 ## Context
 

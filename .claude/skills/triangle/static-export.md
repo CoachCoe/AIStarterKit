@@ -1,4 +1,15 @@
+---
+name: triangle-static-export
+description: "Static export requirements for Bulletin/IPFS deployment. Triggers: static export, bulletin deploy, ipfs, no ssr"
+---
+
 # Static Export Requirements
+
+## When to Activate
+
+- Deploying Triangle host or product to Bulletin/IPFS
+- Configuring Next.js or Vite for static output
+- Troubleshooting SSR-related deployment issues
 
 ## Context
 

@@ -1,4 +1,15 @@
+---
+name: triangle-product-sdk
+description: "Build products that run inside Triangle hosts. Triggers: product sdk, embedded product, sandbox, host api"
+---
+
 # Product SDK - Building Embedded Products
+
+## When to Activate
+
+- Building a dApp that runs inside Triangle hosts
+- Using @novasamatech/product-sdk
+- Implementing Host API communication from a product
 
 ## Context
 
@@ -27,15 +38,36 @@ pnpm add @novasamatech/host-api@0.6.6-1
 
 ## Key SDK Exports
 
-```typescript
+```javascript
 import {
-  sandboxProvider,          // Environment detection
-  metaProvider,             // Host connection status
-  createAccountsProvider,   // Account management
-  hostApi,                  // Host API instance
-} from '@novasamatech/product-sdk';
+  // Inject Spektr extension shim for account access
+  injectSpektrExtension,
 
-import { toHex } from '@novasamatech/host-api';
+  // Create enable factory for { accounts, signer } interface
+  createNonProductExtensionEnableFactory,
+
+  // Account provider with subscribeAccountConnectionStatus, getNonProductAccounts
+  createAccountsProvider,
+
+  // Transport connection status (connecting/connected/disconnected)
+  metaProvider,
+
+  // PostMessage transport connecting iframe to Host
+  sandboxTransport,
+
+  // Low-level Host API (signRaw, etc.)
+  hostApi,
+
+  // Host-scoped storage (readJSON/writeJSON/clear)
+  hostLocalStorage,
+
+  // JSON-RPC provider routed through Host's chain connection
+  createPapiProvider,
+} from "@novasamatech/product-sdk";
+
+import { Binary, createClient } from "polkadot-api";
+import { toHex } from "polkadot-api/utils";
+import { getWsProvider } from "polkadot-api/ws-provider";
 ```
 
 ## Environment Detection
@@ -195,17 +227,124 @@ export function useTriangleAccount() {
 }
 ```
 
-## Local Storage (Scoped)
+## Host Storage API
 
-The host scopes localStorage per product. Use it normally:
+Use `hostLocalStorage` for persistent key-value storage scoped to your app:
 
-```typescript
-// This is automatically scoped to your product
-localStorage.setItem('user-preference', 'dark');
-const pref = localStorage.getItem('user-preference');
+```javascript
+import { hostLocalStorage } from "@novasamatech/product-sdk";
+
+// Write JSON data
+await hostLocalStorage.writeJSON("user-settings", { theme: "dark", fontSize: 14 });
+
+// Read JSON data
+const settings = await hostLocalStorage.readJSON("user-settings");
+// → { theme: "dark", fontSize: 14 }
+
+// Clear a key
+await hostLocalStorage.clear("user-settings");
+
+// Also available: readBytes/writeBytes, readString/writeString
 ```
 
-The host prefixes keys: `product:{productId}:{key}`
+## Transaction Signing (signSubmitAndWatch)
+
+Sign and submit transactions with full lifecycle tracking:
+
+```javascript
+// Build signer from accountsProvider
+const signer = accountsProvider.getNonProductAccountSigner({
+  dotNsIdentifier: "",
+  derivationIndex: 0,
+  publicKey: providerAccounts[0].publicKey,
+});
+
+// Connect to chain
+const client = createClient(getWsProvider(CHAIN.wsUrl));
+const api = client.getUnsafeApi();
+
+// Build and submit transaction
+const tx = api.tx.System.remark({
+  remark: Binary.fromBytes(new TextEncoder().encode("Hello")),
+});
+
+// Subscribe to lifecycle events
+tx.signSubmitAndWatch(signer).subscribe({
+  next(ev) {
+    if (ev.type === "txBestBlocksState" && ev.found) {
+      console.log("Included in best block...");
+    } else if (ev.type === "finalized") {
+      console.log(`Finalized in block ${ev.block.hash}`);
+    }
+  },
+  error(e) {
+    console.error("Transaction failed:", e.message);
+  },
+});
+```
+
+## Sign Raw Message
+
+Sign arbitrary data without on-chain submission:
+
+```javascript
+import { hostApi } from "@novasamatech/product-sdk";
+import { toHex } from "polkadot-api/utils";
+
+const result = await hostApi.signRaw({
+  tag: "v1",
+  value: {
+    address: toHex(publicKey),
+    data: { tag: "Bytes", value: new TextEncoder().encode("Message to sign") },
+  },
+});
+
+// Result is a neverthrow Result type
+result.match(
+  (ok) => console.log(`Signature: ${ok.value.signature}`),
+  (err) => console.error(`Sign failed: ${err.value.name}`),
+);
+```
+
+## Chain Reads via Host Provider
+
+Query on-chain state through Host-managed connection (no direct WebSocket):
+
+```javascript
+import { createPapiProvider } from "@novasamatech/product-sdk";
+import { createClient } from "polkadot-api";
+
+const CHAIN_GENESIS = "0xd6eec26135305a8ad257a20d003357284c8aa03d0bdb2b357ab0a22371e11ef2";
+
+// Create client using Host's connection (not direct WebSocket)
+const provider = createPapiProvider(CHAIN_GENESIS);
+const client = createClient(provider);
+
+// Query finalized block
+const block = await client.getFinalizedBlock();
+console.log(`Block #${block.number}: ${block.hash}`);
+
+// Query storage (untyped API)
+const api = client.getUnsafeApi();
+const timestamp = await api.query.Timestamp.Now.getValue();
+console.log(`On-chain time: ${new Date(Number(timestamp)).toISOString()}`);
+
+// Clean up
+client.destroy();
+```
+
+## Legacy: Scoped localStorage
+
+The host also scopes `window.localStorage` per product:
+
+```javascript
+// Automatically scoped to your product
+localStorage.setItem('user-preference', 'dark');
+const pref = localStorage.getItem('user-preference');
+// Host prefixes keys: product:{productId}:{key}
+```
+
+**Prefer `hostLocalStorage`** for explicit Host storage API.
 
 ## Graceful Degradation
 
@@ -242,3 +381,9 @@ function initializeApp() {
 | Hardcoding chain endpoints | FORBIDDEN | Must use host's provider |
 | Using `window.ethereum` | FORBIDDEN | Not injected in Triangle |
 | Not checking `isHosted()` | RISKY | Code must work in both modes |
+
+## Working Example
+
+For a complete working implementation of all these patterns, see:
+- **`templates/minimal-host-app/`** - Vanilla JS starter with all SDK features
+- **`templates/minimal-host-app/src/main.js`** - All patterns in one file (~460 lines)

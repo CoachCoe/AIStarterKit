@@ -169,9 +169,59 @@ bun run src/cli/index.ts content view <domain-name>
 
 **See also:** `dotli.md` skill for understanding client-side resolution architecture.
 
-## Vite Configuration
+## Automated Deploy Script
 
-**REQUIRED** for IPFS-compatible paths:
+For automated deployments, use the deploy script from `templates/minimal-host-app/deploy.sh`:
+
+```bash
+#!/usr/bin/env bash
+# Usage: ./deploy.sh <name>
+# Examples:
+#   ./deploy.sh my-app           # → my-app.dot.li
+#   ./deploy.sh test.my-app      # → test.my-app.dot.li (subdomain)
+
+set -euo pipefail
+NAME="${1:?Usage: ./deploy.sh <name>}"
+BUILD_DIR="./dist"
+
+# Validate mnemonic
+if [ -z "${DOTNS_MNEMONIC:-}" ]; then
+  echo "Error: DOTNS_MNEMONIC required"
+  echo "  export DOTNS_MNEMONIC=\$(p1p read \"p1p://<locker>/dotns/customFields.mnemonic\" -n)"
+  exit 1
+fi
+AUTH=(--mnemonic "$DOTNS_MNEMONIC")
+
+# 1. Authorize for Bulletin
+ADDRESS=$(dotns account address "${AUTH[@]}")
+dotns bulletin authorize "$ADDRESS" "${AUTH[@]}" || echo "(already authorized)"
+
+# 2. Upload to Bulletin
+RESULT=$(dotns bulletin upload "$BUILD_DIR" --json --parallel "${AUTH[@]}")
+CID=$(echo "$RESULT" | jq -r '.cid')
+
+# 3. Register domain (handles subdomains automatically)
+if [[ "$NAME" == *.* ]]; then
+  SUB="${NAME%%.*}"; PARENT="${NAME#*.}"
+  dotns register domain --name "$PARENT" --status full "${AUTH[@]}" 2>/dev/null || true
+  dotns register subname --name "$SUB" --parent "$PARENT" "${AUTH[@]}"
+else
+  dotns register domain --name "$NAME" --status full "${AUTH[@]}" 2>/dev/null || true
+fi
+
+# 4. Set contenthash
+dotns content set "$NAME" "$CID" "${AUTH[@]}"
+
+echo "Live at: https://${NAME}.dot.li"
+```
+
+**Full script:** See `templates/minimal-host-app/deploy.sh` for complete version with error handling.
+
+## Build Options
+
+### Option 1: Vite (Full Framework)
+
+**REQUIRED** `base: './'` for IPFS-compatible paths:
 
 ```typescript
 // vite.config.ts
@@ -182,6 +232,39 @@ export default defineConfig({
   // ... rest of config
 });
 ```
+
+### Option 2: Minimal esbuild (Single HTML File)
+
+For simple apps, bundle everything into one HTML file:
+
+```javascript
+// build.mjs
+import { build } from "esbuild";
+import { readFileSync, writeFileSync, mkdirSync } from "fs";
+
+// Bundle JS with all dependencies inlined
+const result = await build({
+  entryPoints: ["src/main.js"],
+  bundle: true,
+  format: "esm",
+  write: false,
+  minify: true,
+});
+
+// Read HTML and inline the bundle
+let html = readFileSync("src/index.html", "utf-8");
+html = html.replace(/<script type="importmap">[\s\S]*?<\/script>\s*/, "");
+html = html.replace(
+  /<script type="module" src="main.js"><\/script>/,
+  `<script type="module">\n${result.outputFiles[0].text}</script>`,
+);
+
+mkdirSync("dist", { recursive: true });
+writeFileSync("dist/index.html", html);
+console.log(`dist/index.html (${(Buffer.byteLength(html) / 1024).toFixed(1)} KB)`);
+```
+
+**See:** `templates/minimal-host-app/` for complete example.
 
 ## Environment Variables
 
@@ -209,20 +292,46 @@ DOTNS_KEYSTORE_PASSWORD=your-password
 | "Insufficient balance" | Get PAS from faucet, bridge to Asset Hub |
 | Domain already registered | Check owner: `dotns lookup owner-of <domain>` |
 
+## Text Records (Metadata)
+
+Store metadata on your .dot domain (Twitter handles, descriptions, etc.):
+
+```bash
+# Set a text record
+dotns text set <domain-name> <key> <value> -m "$DOTNS_MNEMONIC"
+
+# Examples
+dotns text set myapp twitter "@myapp" -m "$DOTNS_MNEMONIC"
+dotns text set myapp description "My decentralized app" -m "$DOTNS_MNEMONIC"
+dotns text set myapp url "https://myapp.dot.li" -m "$DOTNS_MNEMONIC"
+
+# View a text record
+dotns text view <domain-name> <key>
+
+# Examples
+dotns text view myapp twitter      # → @myapp
+dotns text view myapp description  # → My decentralized app
+```
+
+**Common keys:** `twitter`, `github`, `description`, `url`, `email`, `avatar`
+
 ## Common Commands Reference
 
 ```bash
 # View content hash on domain
-bun run src/cli/index.ts content view <domain-name>
+dotns content view <domain-name>
+
+# View text records
+dotns text view <domain-name> <key>
 
 # View upload history
-bun run src/cli/index.ts bulletin history
+dotns bulletin history -m "$DOTNS_MNEMONIC"
 
 # Check PoP status
-bun run src/cli/index.ts pop status -m "$DOTNS_MNEMONIC"
+dotns pop status -m "$DOTNS_MNEMONIC"
 
 # Lookup domain info
-bun run src/cli/index.ts lookup name <domain-name>
+dotns lookup name <domain-name>
 ```
 
 ## Anti-Patterns
@@ -235,3 +344,44 @@ bun run src/cli/index.ts lookup name <domain-name>
 | Commit mnemonic to git | FORBIDDEN | Security risk |
 | Use absolute paths in build | FORBIDDEN | Breaks on IPFS gateways |
 | Deploy to mainnet first | FORBIDDEN | Test on Paseo first |
+
+---
+
+## Verification (REQUIRED before marking complete)
+
+### Pre-Deployment
+
+```bash
+# Build succeeds
+npm run build  # or pnpm build
+
+# Output is static files
+ls dist/
+
+# Check for relative paths (should see ./ not /)
+grep -r 'src="/' dist/ && echo "ERROR: absolute paths found" || echo "OK: paths are relative"
+```
+
+### Post-Deployment
+
+```bash
+# Content hash is set
+dotns content view <domain-name>
+
+# Site loads correctly
+curl -I "https://<domain-name>.dot.li/"
+# Should return 200
+
+# Open in browser
+open "https://<domain-name>.dot.li/"
+```
+
+### Checklist
+
+- [ ] PoP Lite set (`pop status` shows active)
+- [ ] Bulletin authorized (`bulletin authorize`)
+- [ ] Build output is static (no SSR)
+- [ ] `base: './'` in Vite config (or equivalent)
+- [ ] Content hash set on domain
+- [ ] Site loads in browser
+- [ ] All assets load (check network tab)

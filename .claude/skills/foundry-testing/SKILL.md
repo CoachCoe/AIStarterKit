@@ -226,3 +226,30 @@ forge coverage
 | Hardcode addresses | FORBIDDEN | Use makeAddr() |
 | Forget vm.prank | FORBIDDEN | Wrong msg.sender |
 | Test implementation directly | FORBIDDEN | Test via proxy |
+
+---
+
+## Verification (REQUIRED before marking complete)
+
+```bash
+# All tests pass
+forge test -vvv
+
+# Check coverage (minimum 80%)
+forge coverage
+
+# No formatting issues
+forge fmt --check
+
+# Gas report for optimization
+forge test --gas-report
+```
+
+### Checklist
+
+- [ ] All tests pass (`forge test`)
+- [ ] Coverage >= 80% (`forge coverage`)
+- [ ] All revert conditions tested
+- [ ] Proxy tests use proxy address, not implementation
+- [ ] Access control tests for all privileged functions
+- [ ] Edge cases covered (zero amounts, max values, etc.)

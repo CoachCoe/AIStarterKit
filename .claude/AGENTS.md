@@ -6,6 +6,42 @@ This file provides persistent context for AI coding agents. Read this FIRST befo
 
 ---
 
+## Skill Loading Protocol (MANDATORY)
+
+**Before starting ANY implementation work, you MUST load the relevant skill.**
+
+### Quick Reference
+
+| Task Type | Load These Skills FIRST |
+|-----------|------------------------|
+| Smart contract development | `upgradeable-contracts.md` + `foundry-testing/` |
+| Contract deployment | `deploy-contracts/` + `asset-hub-evm.md` |
+| Frontend/Host app | `triangle/OVERVIEW.md` → then specific sub-skill |
+| Frontend deployment | `deploy-frontend/` |
+| Secrets/credentials | `p1p-secrets/` |
+| Local development | `previewnet.md` |
+| Code quality questions | `code-quality.md` |
+| Security review | `security.md` |
+
+### Loading Procedure
+
+1. **Identify task domain** from table above
+2. **Read the skill file** completely before writing any code
+3. **Check "When to Activate"** section to confirm skill applies
+4. **Follow patterns** in skill's code examples
+5. **Check Anti-Patterns** section to avoid mistakes
+
+### When Unsure
+
+If task doesn't clearly map to a skill:
+1. Check `.claude/skills/INDEX.md` for skill discovery
+2. Read skill's "When to Activate" section
+3. Load `triangle/OVERVIEW.md` first for any Triangle/Host work
+
+**Rule:** Never write implementation code without first loading the relevant skill.
+
+---
+
 ## Critical Instructions
 
 ### 1. Skills First
@@ -179,7 +215,7 @@ project/
 
 | Rule | Enforcement | Status |
 |------|-------------|--------|
-| Solidity 0.8.20+ | `pragma solidity ^0.8.20` | MANDATORY |
+| Solidity 0.8.28+ | `pragma solidity ^0.8.28` | MANDATORY |
 | SPDX license identifier | Every file | MANDATORY |
 | No hardcoded addresses | Use environment/config | MANDATORY |
 | No `console.log` in production | Remove before deploy | MANDATORY |

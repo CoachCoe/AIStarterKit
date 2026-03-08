@@ -259,3 +259,42 @@ local = "http://127.0.0.1:8545"
 | Deploy upgradeable without proxy | FORBIDDEN | Breaks upgrade path |
 | Initialize in constructor | FORBIDDEN | Use initializer modifier |
 | Forget storage gaps | FORBIDDEN | Blocks future upgrades |
+
+---
+
+## Verification (REQUIRED before marking complete)
+
+### Pre-Deployment
+
+```bash
+# All tests pass
+forge test -vvv
+
+# Contracts compile
+forge build
+
+# Environment configured
+echo "PRIVATE_KEY: $([ -n "$PRIVATE_KEY" ] && echo 'set' || echo 'MISSING')"
+```
+
+### Post-Deployment
+
+```bash
+# Transaction mined
+# Check output for "Contract deployed at: 0x..."
+
+# Verify on Subscan (Paseo)
+# https://paseo.subscan.io/account/<contract_address>
+
+# Test basic functionality
+cast call <contract_address> "owner()(address)" --rpc-url paseo
+```
+
+### Checklist
+
+- [ ] All tests pass locally (`forge test`)
+- [ ] Deployed to Previewnet first (if first deployment)
+- [ ] Deployed to Paseo with `--slow` flag
+- [ ] Logged all deployed addresses
+- [ ] Verified on Subscan
+- [ ] Tested basic read/write functions

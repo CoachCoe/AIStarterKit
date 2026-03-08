@@ -1,4 +1,15 @@
+---
+name: triangle-dotns-resolution
+description: "Resolve .dot domains to IPFS content in Triangle hosts. Triggers: dotns, domain resolution, contenthash"
+---
+
 # DotNS Resolution
+
+## When to Activate
+
+- Implementing .dot domain resolution in a host
+- Loading products from DotNS domains
+- Racing resolvers across multiple chains
 
 ## Context
 

@@ -1,4 +1,16 @@
+---
+name: upgradeable-contracts
+description: "OpenZeppelin UUPS proxy patterns for upgradeable contracts. Triggers: upgradeable, proxy, UUPS, upgrade"
+---
+
 # OpenZeppelin UUPS Upgradeable Contracts
+
+## When to Activate
+
+- Implementing upgradeable smart contracts
+- Using UUPS proxy pattern
+- Setting up proxy deployment scripts
+- Upgrading existing proxy contracts
 
 ## Context
 Use when implementing upgradeable contracts with OpenZeppelin UUPS pattern.
@@ -27,7 +39,7 @@ CRITICAL: Always inherit in this exact order to avoid linearization issues:
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
@@ -158,3 +170,29 @@ MyContract(proxyAddress).upgradeToAndCall(
 | Forget `__gap` in base contracts | Blocks future upgrades | MUST reserve 50 storage slots |
 | Skip parent `__X_init()` calls | Uninitialized state | MUST call ALL parent initializers |
 | Use `delegatecall` manually | Storage corruption risk | MUST use UUPS upgrade mechanism |
+
+---
+
+## Verification (REQUIRED before marking complete)
+
+```bash
+# Contracts compile
+forge build
+
+# All tests pass (including proxy tests)
+forge test -vvv
+
+# Verify upgrade works
+forge test --match-test "Upgrade"
+```
+
+### Checklist
+
+- [ ] Contract inherits from correct upgradeable bases
+- [ ] `_disableInitializers()` in constructor
+- [ ] `initialize()` has `initializer` modifier
+- [ ] All parent `__X_init()` functions called
+- [ ] `uint256[50] __gap` added for storage expansion
+- [ ] `_authorizeUpgrade()` restricts to admin role
+- [ ] Tests use proxy address, not implementation
+- [ ] Upgrade tests verify state preservation

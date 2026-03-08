@@ -22,6 +22,43 @@ Use when deploying or interacting with contracts on Polkadot Asset Hub EVM.
 - Chain ID: 420420420
 - Block Explorer: https://assethub-polkadot.subscan.io
 
+## JavaScript Chain Configuration
+
+For frontend apps using polkadot-api or Product SDK:
+
+```javascript
+// Chain configuration for Paseo Asset Hub
+const CHAIN = {
+  name: "Paseo Asset Hub",
+  genesis: "0xd6eec26135305a8ad257a20d003357284c8aa03d0bdb2b357ab0a22371e11ef2",
+  wsUrl: "wss://sys.ibp.network/asset-hub-paseo",
+};
+
+// Chain configuration for Polkadot Asset Hub (mainnet)
+const CHAIN_MAINNET = {
+  name: "Polkadot Asset Hub",
+  genesis: "0x68d56f15f85d3136970ec16946040bc1752654e906147f7e43e9d539d7c3de2f",
+  wsUrl: "wss://sys.ibp.network/statemint",
+};
+```
+
+**Usage with Host API:**
+```javascript
+import { createPapiProvider } from "@novasamatech/product-sdk";
+import { createClient } from "polkadot-api";
+
+const provider = createPapiProvider(CHAIN.genesis);
+const client = createClient(provider);
+```
+
+**Usage with direct WebSocket:**
+```javascript
+import { createClient } from "polkadot-api";
+import { getWsProvider } from "polkadot-api/ws-provider";
+
+const client = createClient(getWsProvider(CHAIN.wsUrl));
+```
+
 ## Foundry Configuration
 
 Use this exact foundry.toml:
@@ -31,7 +68,7 @@ Use this exact foundry.toml:
 src = "contracts"
 out = "out"
 libs = ["lib"]
-solc = "0.8.20"
+solc = "0.8.28"
 optimizer = true
 optimizer_runs = 200
 evm_version = "london"

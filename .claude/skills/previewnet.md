@@ -1,4 +1,16 @@
+---
+name: previewnet
+description: "Ephemeral development network with pre-funded accounts. Triggers: previewnet, local dev, no faucet, ephemeral"
+---
+
 # Previewnet - Ephemeral Development Network
+
+## When to Activate
+
+- Setting up local development environment
+- Testing before using Paseo testnet tokens
+- Need pre-funded accounts without faucet
+- Integration testing with Asset Hub, People Chain, or Bulletin
 
 ## Context
 Use Previewnet for initial development and testing before deploying to Paseo testnet. No faucet tokens needed - accounts are pre-funded.

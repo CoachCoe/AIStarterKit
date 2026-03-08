@@ -2,6 +2,8 @@
 
 > Build on Polkadot with AI-assisted development
 
+**New here?** Start with `QUICKSTART.md` for the fastest path to building.
+
 ## Agent Context
 
 **For AI Coding Agents**: Read `.claude/AGENTS.md` FIRST for critical instructions, safety boundaries, and operational context.
@@ -32,6 +34,10 @@ project/
 │   ├── AGENTS.md                # Agent constraints (READ FIRST)
 │   ├── settings.local.json      # Permissions
 │   └── skills/                  # Domain knowledge
+├── scripts/
+│   └── init.sh                  # One-command project setup
+├── templates/                   # Working starter templates
+│   └── minimal-host-app/        # Vanilla JS Triangle app (~800 lines)
 ├── packages/
 │   ├── contracts/               # Solidity contracts (Foundry)
 │   │   ├── contracts/
@@ -53,7 +59,7 @@ project/
 | Layer | Technology | Rationale |
 |-------|-----------|-----------|
 | Monorepo | pnpm workspaces | Fast, disk-efficient |
-| Contracts | Solidity 0.8.20+ | EVM compatibility |
+| Contracts | Solidity 0.8.28+ | EVM compatibility |
 | Framework | Foundry | Fast testing, scripting |
 | Upgrades | OpenZeppelin UUPS | Battle-tested patterns |
 | Network | **Paseo Asset Hub** | Primary target chain |
@@ -128,7 +134,7 @@ Local Anvil → Previewnet → Paseo → Mainnet
 
 ### Solidity
 
-- **Solidity 0.8.20+** for latest features
+- **Solidity 0.8.28+** for latest features
 - **SPDX license identifiers** on every file
 - **NatSpec comments** for public functions only
 - **OpenZeppelin contracts** for standard patterns
@@ -136,7 +142,7 @@ Local Anvil → Previewnet → Paseo → Mainnet
 
 ```solidity
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.28;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -264,7 +270,26 @@ Domain-specific knowledge in `.claude/skills/`:
 | `triangle/` | Full Triangle skill family | spektr, authentication, dotns, service worker |
 | `foundry-testing/` | Foundry/Solidity test patterns | forge test, solidity test |
 | `mutation-testing/` | Stryker mutation testing | mutation, stryker, test quality |
+| `error-handling.md` | Error patterns (Solidity + TypeScript) | error, exception, revert, try catch |
 | `skill-creator/` | Create new skills | create skill, new skill |
+| `INDEX.md` | Skill discovery index | find skill, which skill |
+
+### Templates
+
+Working starter code in `templates/` with one-command setup via `scripts/init.sh`:
+
+| Template | Command | What You Get |
+|----------|---------|--------------|
+| Triangle Host App | `./scripts/init.sh my-app` | Host API, signing, storage |
+| Smart Contracts | `./scripts/init.sh my-app --contracts` | UUPS, OpenZeppelin, Foundry |
+
+**Quick Start**:
+```bash
+./scripts/init.sh my-app       # Create Triangle host app
+cd my-app
+npm run dev                    # → localhost:8000
+npm run build && ./deploy.sh my-app  # → https://my-app.dot.li
+```
 
 **Usage**: Load relevant skills before implementing features in that domain.
 

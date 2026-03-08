@@ -1,4 +1,15 @@
+---
+name: triangle-overview
+description: "Triangle architecture overview and skill family index. Triggers: triangle, polkadot desktop, polkadot app, host"
+---
+
 # Triangle Skills Overview
+
+## When to Activate
+
+- Starting any Triangle/Host development (load this FIRST)
+- Need to understand sandboxed product architecture
+- Looking for which Triangle sub-skill to load next
 
 ## What is the Polkadot Triangle?
 
@@ -63,19 +74,38 @@ pnpm add @novasamatech/host-api@0.6.6-1
 
 **Version matching is critical:** SDK and Host versions must match (e.g., 0.6.x SDK ↔ 0.6.x Desktop).
 
-## Reference Implementation
+## Working Starter Template
 
-For working code and detailed patterns, see:
+**`templates/minimal-host-app/`** - Complete working example with:
+- `src/main.js` - All SDK patterns in ~460 lines
+- `src/index.html` - Minimal UI with inline styles
+- `build.mjs` - Single-file bundler (32 lines)
+- `deploy.sh` - Full deployment workflow
+
+```bash
+cd templates/minimal-host-app
+npm install && npm run dev  # → http://localhost:8000
+npm run build               # → dist/index.html
+./deploy.sh my-app          # → https://my-app.dot.li
+```
+
+## Additional References
+
+For more complex patterns, see:
 - **triangle-web-host-demo** repository (local: `~/Documents/dev/triangle-web-host-demo`)
 - **CLAUDE.md** in that repo (500+ lines of implementation details)
 
 ## Development Workflow
 
 ```
-1. Build Product   →  Standard web app + @novasamatech/product-sdk
-2. Deploy          →  Bulletin Chain + DotNS (see deploy-frontend/ skill)
-3. Test in Host    →  Desktop app: search for .dot domain or localhost:3000
+1. Start from template  →  cp -r templates/minimal-host-app my-app
+2. Develop locally      →  npm run dev (localhost:8000)
+3. Build                →  npm run build (single dist/index.html)
+4. Deploy               →  ./deploy.sh my-app (→ my-app.dot.li)
+5. Test in Host         →  Open in Polkadot Desktop or dot.li
 ```
+
+**See:** `deploy-frontend/` skill for detailed deployment workflow.
 
 ## What's Working Now
 
