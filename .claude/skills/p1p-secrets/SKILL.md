@@ -25,7 +25,7 @@ description: "Manage secrets for dApps using p1p CLI. Triggers: p1p, secrets, en
 
 ## Prerequisites
 
-1. **p1p CLI installed** from polkadot-1p repo
+1. **p1p CLI installed** from Polkadot Locker repo (github.com/paritytech/polkadot-1p)
 2. **Wallet with signed session** (keyfile, mnemonic, or web auth)
 3. **Locker created** with entries for your secrets
 

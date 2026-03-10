@@ -23,19 +23,31 @@ DotNS contracts are deployed on **multiple chains**, and domains may be register
 
 | Chain | Purpose | RPC Type | Speed |
 |-------|---------|----------|-------|
-| **Paseo Asset Hub** | Main testnet | HTTP (EVM) | ~100ms |
-| **Previewnet** | Ephemeral dev network | WebSocket | ~500ms |
+| **Paseo Asset Hub** | Main Asset Hub system chain on Paseo testnet | HTTP (EVM) | ~100ms |
+| **Passet Hub** | Temporary testnet for `pallet-revive` smart contract testing | WebSocket (Substrate) | ~500ms |
 
-**Problem:** When resolving a domain, we don't know which chain it was registered on.
+**Problem:** When resolving a domain, we don't know which chain it was registered on:
+- Newer domains (e.g., `stable-hackm33.dot`) → registered on Paseo Asset Hub
+- Older/test domains → may be on Passet Hub
 
 **Solution:** Race resolvers in parallel using `Promise.any()` - first success wins.
 
 ## Resolver Configuration
 
+**Resolver Endpoints:**
+
+| Resolver | RPC | Contract Address |
+|----------|-----|------------------|
+| Paseo Asset Hub (EVM) | `https://services.polkadothub-rpc.com/testnet` | `0x7756DF72CBc7f062e7403cD59e45fBc78bed1cD7` |
+| Passet Hub (Substrate) | `wss://passet-hub-paseo.ibp.network` | `0xb3d23aDC08dc3bb8b1130579e81449afbA5cc3c2` |
+
 ```typescript
 // lib/dotns/constants.ts
-export const PASEO_ASSET_HUB_EVM_RPC = 'https://paseo-asset-hub-eth-rpc.polkadot.io';
+export const PASEO_ASSET_HUB_EVM_RPC = 'https://services.polkadothub-rpc.com/testnet';
 export const PASEO_ASSET_HUB_RESOLVER = '0x7756DF72CBc7f062e7403cD59e45fBc78bed1cD7';
+
+export const PASSET_HUB_WS_RPC = 'wss://passet-hub-paseo.ibp.network';
+export const PASSET_HUB_RESOLVER = '0xb3d23aDC08dc3bb8b1130579e81449afbA5cc3c2';
 
 export const DOTNS_CONTENT_RESOLVER_ABI = [
   {

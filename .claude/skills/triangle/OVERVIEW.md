@@ -47,6 +47,43 @@ The Polkadot Triangle is a decentralized product ecosystem consisting of three h
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## Slot-Based Embedding (Advanced Hosts)
+
+For hosts that need to embed multiple products with navigation persistence, use the **slot-based persistent overlay architecture**:
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  layout.tsx                                                   │
+│  ├── Header (nav links + wallet)                              │
+│  ├── <main className="flex-1 relative">                       │
+│  │   ├── {children}  ← pages with <DAppSandbox> slots        │
+│  │   └── ClientOnlyPersistentOverlay                          │
+│  │        └── PersistentOverlay (PolkadotProvider wrapper)    │
+│  │             └── IframeInstance × N                          │
+│  │                  ├── useProductFrame (hook)                 │
+│  │                  └── EmbeddedAppPanel (UI)                 │
+│  └── footer                                                   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Key components:**
+
+| Component | Purpose |
+|-----------|---------|
+| `DAppSandbox` | Slot component — registers position, renders placeholder div |
+| `PersistentOverlay` | Renders all iframes absolutely positioned over their slots |
+| `useSlotStore` | Zustand store tracking slot registrations and positions |
+| `useProductFrame` | Headless hook: container setup, signing, dotNS resolution |
+
+**Lifecycle:**
+1. Page renders `<DAppSandbox appId="..." source={...} />` — registers slot in store
+2. Slot measures its position via ResizeObserver
+3. `PersistentOverlay` detects new registration → renders iframe at slot's position
+4. User navigates away → slot unmounts → iframe hides (`display: none`)
+5. User returns → slot re-mounts → iframe repositions instantly (no reload)
+
+**See:** `spektr-manager.md` for implementation details.
+
 ## Skill Index
 
 | Skill | Purpose | When to Load |

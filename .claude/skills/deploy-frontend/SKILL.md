@@ -24,7 +24,10 @@ description: "Deploy frontend to Bulletin Chain + DotNS. Triggers: deploy fronte
 ## Prerequisites
 
 1. **Node.js 22+** or **Bun** (for WebSocket support)
-2. **dotns CLI** - Install from https://github.com/nickreynolds/dotns-sdk
+2. **dotns CLI** - Install globally:
+   ```bash
+   npm install -g https://github.com/paritytech/dotns-sdk/releases/latest/download/dotns-cli.tgz
+   ```
 3. **Wallet with PAS tokens** on Asset Hub Paseo
 4. **Vite config** with `base: './'` for IPFS-compatible relative paths
 

@@ -275,7 +275,39 @@ export const PASEO_ASSET_HUB: ChainConfig = {
   },
 };
 
-export const SUPPORTED_CHAINS: ChainConfig[] = [PASEO_ASSET_HUB, PREVIEWNET, PREVIEWNET_ASSET_HUB];
+export const PREVIEWNET: ChainConfig = {
+  id: 'previewnet',
+  name: 'Previewnet',
+  genesisHash: '0x21bbc39386fd3a9be1a1a783979ff2874abdb2449464cbfbcc706bb153be04c0',
+  rpcUrl: 'wss://previewnet.substrate.dev/relay/alice',
+  tokenSymbol: 'UNIT',
+  tokenDecimals: 12,
+};
+
+export const PREVIEWNET_ASSET_HUB: ChainConfig = {
+  id: 'previewnet-asset-hub',
+  name: 'Previewnet Asset Hub',
+  genesisHash: '0x38e8c158d58662ea7d9919a589906a1a440ac25f5c1f084dbc3b113ff0c09446',
+  rpcUrl: 'wss://previewnet.substrate.dev/asset-hub',
+  tokenSymbol: 'UNIT',
+  tokenDecimals: 12,
+};
+
+export const POP3_ASSET_HUB: ChainConfig = {
+  id: 'pop3-asset-hub',
+  name: 'POP3 Stable Asset Hub',
+  genesisHash: '0xf187e596a087c2176c303ec77efbec4c7ef550a6f073c9cd4412a96d84cbfb07',
+  rpcUrl: 'wss://pop3-testnet.parity-lab.parity.io/asset-hub',
+  tokenSymbol: 'WND',
+  tokenDecimals: 12,
+};
+
+export const SUPPORTED_CHAINS: ChainConfig[] = [
+  PASEO_ASSET_HUB,
+  POP3_ASSET_HUB,
+  PREVIEWNET,
+  PREVIEWNET_ASSET_HUB,
+];
 ```
 
 ## Usage with React Hook
