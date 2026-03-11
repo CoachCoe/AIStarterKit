@@ -265,3 +265,32 @@ Verify:
 | SSR for embedding code | FORBIDDEN | Browser-only APIs |
 | Image optimization | FORBIDDEN | No optimization server |
 | Middleware | FORBIDDEN | No edge runtime |
+
+## Browser Compatibility (Sandbox Restrictions)
+
+Products run in a sandboxed iframe with no direct network access. These Node.js patterns will fail:
+
+| Pattern | Status | Alternative |
+|---------|--------|-------------|
+| `Buffer.from()` | FORBIDDEN | Use `Uint8Array` or `ss58Encode` from `@polkadot-labs/hdkd-helpers` |
+| `fetch()` to external APIs | FORBIDDEN | Use host-provided APIs only |
+| `window.ethereum` | FORBIDDEN | Use `@novasamatech/product-sdk` accounts |
+| External tile servers (Leaflet, MapBox) | FORBIDDEN | HTTP requests blocked in sandbox |
+| Direct WebSocket connections | FORBIDDEN | Use host's chain provider |
+
+### Converting Public Keys to Addresses
+
+```typescript
+// ❌ WRONG - Buffer not available in browsers
+const address = '0x' + Buffer.from(publicKey).toString('hex');
+
+// ✅ CORRECT - Use ss58Encode
+import { ss58Encode } from '@polkadot-labs/hdkd-helpers';
+const address = ss58Encode(publicKey, 42); // 42 = generic SS58 prefix
+```
+
+### Installing Browser-Compatible Helpers
+
+```bash
+pnpm add @polkadot-labs/hdkd-helpers
+```

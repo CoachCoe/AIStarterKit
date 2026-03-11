@@ -45,15 +45,13 @@ description: "Deploy frontend to Bulletin Chain + DotNS. Triggers: deploy fronte
 **This is REQUIRED before domain registration. Cannot skip this step.**
 
 ```bash
-cd /path/to/dotns-sdk/packages/cli
-
 # Set PoP Lite verification
-bun run src/cli/index.ts pop set lite -m "$DOTNS_MNEMONIC"
+dotns pop set lite -m "$DOTNS_MNEMONIC"
 ```
 
 Verify PoP status:
 ```bash
-bun run src/cli/index.ts pop status -m "$DOTNS_MNEMONIC"
+dotns pop status -m "$DOTNS_MNEMONIC"
 ```
 
 ### Step 2: Authorize for Bulletin Storage
@@ -61,12 +59,14 @@ bun run src/cli/index.ts pop status -m "$DOTNS_MNEMONIC"
 **This is REQUIRED before uploading to Bulletin. Self-service authorization.**
 
 ```bash
-# First, find your Substrate address (run any command to see it)
-bun run src/cli/index.ts --help
+# Get your Substrate address
+dotns account address -m "$DOTNS_MNEMONIC"
 
 # Authorize yourself for Bulletin storage
-bun run src/cli/index.ts bulletin authorize <your-substrate-address> -m "$DOTNS_MNEMONIC"
+dotns bulletin authorize <your-substrate-address> -m "$DOTNS_MNEMONIC"
 ```
+
+**Note:** On Paseo testnet, self-authorization is enabled. On mainnet, you may need Authorizer privileges.
 
 ## Authentication Methods
 
@@ -115,15 +115,13 @@ pnpm run build
 ### Step 2: Check Domain Status
 
 ```bash
-bun run src/cli/index.ts lookup name <domain-name>
+dotns lookup name <domain-name>
 ```
 
 ### Step 3: Register Domain (if not registered)
 
 ```bash
-bun run src/cli/index.ts register domain \
-  --name <domain-label> \
-  -m "$DOTNS_MNEMONIC"
+dotns register domain --name <domain-label> -m "$DOTNS_MNEMONIC"
 ```
 
 **Domain naming rules:**
@@ -134,12 +132,7 @@ bun run src/cli/index.ts register domain \
 ### Step 4: Upload to Bulletin Chain
 
 ```bash
-bun run src/cli/index.ts bulletin upload \
-  ./dist \
-  --parallel \
-  --concurrency 5 \
-  --print-contenthash \
-  -m "$DOTNS_MNEMONIC"
+dotns bulletin upload ./dist --parallel --print-contenthash -m "$DOTNS_MNEMONIC"
 ```
 
 **Output:**
@@ -153,15 +146,14 @@ Save the CID for the next step.
 ### Step 5: Set Content Hash on Domain
 
 ```bash
-bun run src/cli/index.ts content set <domain-name> <cid> \
-  -m "$DOTNS_MNEMONIC"
+dotns content set <domain-name> <cid> -m "$DOTNS_MNEMONIC"
 ```
 
 ### Step 6: Verify Deployment
 
 ```bash
 # Check content hash is set
-bun run src/cli/index.ts content view <domain-name>
+dotns content view <domain-name>
 ```
 
 **Access your site:**
@@ -291,9 +283,25 @@ DOTNS_KEYSTORE_PASSWORD=your-password
 | "Requires Personhood Lite verification" | Run `pop set lite` (see First-Time Setup) |
 | "Account is not authorized for Bulletin" | Run `bulletin authorize` (see First-Time Setup) |
 | Assets return 404 on IPFS | Add `base: './'` to Vite config, rebuild |
-| "Missing WebSocket class" | Use Node.js 22+ or Bun |
+| "Missing WebSocket class" | Use Node.js 22+, Bun, or add `NODE_OPTIONS="--experimental-websocket"` |
 | "Insufficient balance" | Get PAS from faucet, bridge to Asset Hub |
 | Domain already registered | Check owner: `dotns lookup owner-of <domain>` |
+
+### Node.js < 22 WebSocket Workaround
+
+If using Node.js < 22 and getting "Missing WebSocket class" errors:
+
+```bash
+# Add NODE_OPTIONS flag before dotns commands
+NODE_OPTIONS="--experimental-websocket" dotns bulletin upload ./dist --parallel -m "$DOTNS_MNEMONIC"
+NODE_OPTIONS="--experimental-websocket" dotns content set <domain> <cid> -m "$DOTNS_MNEMONIC"
+```
+
+Or set it for your shell session:
+```bash
+export NODE_OPTIONS="--experimental-websocket"
+dotns bulletin upload ./dist --parallel -m "$DOTNS_MNEMONIC"
+```
 
 ## Text Records (Metadata)
 

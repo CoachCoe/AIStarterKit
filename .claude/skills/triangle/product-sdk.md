@@ -72,27 +72,60 @@ import { getWsProvider } from "polkadot-api/ws-provider";
 
 ## Environment Detection
 
+**IMPORTANT:** Do NOT use `sandboxProvider.isCorrectEnvironment()` - it's unreliable. Use `injectSpektrExtension()` which performs the actual host handshake.
+
 ```typescript
 // lib/host/detect.ts
-import { sandboxProvider, metaProvider } from '@novasamatech/product-sdk';
+import {
+  injectSpektrExtension,
+  createAccountsProvider,
+  metaProvider,
+} from '@novasamatech/product-sdk';
 
-let connectionStatus: 'disconnected' | 'connecting' | 'connected' = 'disconnected';
+type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
 
-// Subscribe to connection status (run once at module load)
-if (typeof window !== 'undefined' && sandboxProvider.isCorrectEnvironment()) {
-  metaProvider.subscribeConnectionStatus((status) => {
-    connectionStatus = status;
-  });
+let hostDetectionResult: boolean | null = null;
+let hostDetectionPromise: Promise<boolean> | null = null;
+
+// Create accounts provider at module level (singleton)
+export const accountsProvider = createAccountsProvider();
+
+/**
+ * Initialize host detection - call early in app lifecycle.
+ * Uses injectSpektrExtension() which does the actual host handshake.
+ */
+export async function initHostDetection(): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    hostDetectionResult = false;
+    return false;
+  }
+
+  if (hostDetectionResult !== null) return hostDetectionResult;
+  if (hostDetectionPromise) return hostDetectionPromise;
+
+  hostDetectionPromise = (async () => {
+    const isInHost = await injectSpektrExtension();
+    hostDetectionResult = isInHost;
+
+    if (isInHost) {
+      // Subscribe to meta connection status
+      metaProvider.subscribeConnectionStatus((status: ConnectionStatus) => {
+        console.log('[Host] Meta connection status:', status);
+      });
+    }
+
+    return isInHost;
+  })();
+
+  return hostDetectionPromise;
 }
 
 export function isHosted(): boolean {
-  if (typeof window === 'undefined') return false;
-  return sandboxProvider.isCorrectEnvironment();
+  return hostDetectionResult ?? false;
 }
 
-export function isHostConnected(): boolean {
-  return connectionStatus === 'connected';
-}
+// Re-export metaProvider for status subscriptions
+export { metaProvider };
 ```
 
 ## Account Management
@@ -187,45 +220,108 @@ Each Product gets its own derived account from the user's root identity:
 
 ## React Integration Pattern
 
+**Key patterns:**
+1. Call `initHostDetection()` first (uses `injectSpektrExtension()`)
+2. Call `getNonProductAccounts()` immediately after detection (don't wait for status)
+3. Subscribe to BOTH `accountsProvider.subscribeAccountConnectionStatus` AND `metaProvider.subscribeConnectionStatus`
+
 ```typescript
 // hooks/use-triangle-account.ts
 import { useState, useEffect } from 'react';
-import { sandboxProvider, createAccountsProvider, metaProvider } from '@novasamatech/product-sdk';
+import { ss58Encode } from '@polkadot-labs/hdkd-helpers';
+import {
+  accountsProvider,
+  initHostDetection,
+  metaProvider,
+} from '../lib/host/detect';
+
+type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
+
+interface Account {
+  publicKey: Uint8Array;
+  name?: string;
+}
 
 export function useTriangleAccount() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [isHosted, setIsHosted] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<string>('disconnected');
+  const [account, setAccount] = useState<Account | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting');
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    let cancelled = false;
+    let accountSub: { unsubscribe: () => void } | null = null;
+    let metaUnsub: (() => void) | null = null;
 
-    const hosted = sandboxProvider.isCorrectEnvironment();
-    setIsHosted(hosted);
+    // Fetch accounts - call immediately after detection AND on reconnect
+    const autoConnect = async () => {
+      const result = await accountsProvider.getNonProductAccounts();
+      if (cancelled) return;
 
-    if (!hosted) return;
+      result.match(
+        (accounts: Account[]) => {
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            setConnectionStatus('connected');
+          } else {
+            // No accounts = user not signed in to Triangle
+            setConnectionStatus('disconnected');
+          }
+        },
+        (error: Error) => {
+          console.error('[Wallet] getNonProductAccounts failed:', error);
+          setConnectionStatus('disconnected');
+        },
+      );
+    };
 
-    // Subscribe to connection status
-    const unsubMeta = metaProvider.subscribeConnectionStatus(setConnectionStatus);
+    const setup = async () => {
+      const inHost = await initHostDetection();
+      if (cancelled) return;
 
-    // Get accounts when connected
-    const accountsProvider = createAccountsProvider();
-    const unsubAccounts = accountsProvider.subscribeAccountConnectionStatus(async (status) => {
-      if (status === 'connected') {
-        const result = await accountsProvider.getNonProductAccounts();
-        result.match(setAccounts, console.error);
+      if (!inHost) {
+        setConnectionStatus('disconnected');
+        return;
       }
-    });
+
+      // IMPORTANT: Call immediately after detection (don't wait for status)
+      await autoConnect();
+
+      // Subscribe to account connection status
+      accountSub = accountsProvider.subscribeAccountConnectionStatus(
+        (status: ConnectionStatus) => {
+          if (status === 'connected') {
+            void autoConnect();
+          } else if (status === 'disconnected') {
+            setAccount(null);
+            setConnectionStatus('disconnected');
+          }
+        },
+      );
+
+      // Also subscribe to meta connection status
+      metaUnsub = metaProvider.subscribeConnectionStatus((status: ConnectionStatus) => {
+        if (status === 'connected') {
+          void autoConnect();
+        }
+      });
+    };
+
+    void setup();
 
     return () => {
-      unsubMeta();
-      unsubAccounts();
+      cancelled = true;
+      accountSub?.unsubscribe();
+      metaUnsub?.();
     };
   }, []);
 
-  return { accounts, isHosted, connectionStatus };
+  // Convert public key to SS58 address
+  const address = account ? ss58Encode(account.publicKey, 42) : null;
+
+  return { account, address, connectionStatus, isConnected: connectionStatus === 'connected' };
 }
 ```
+
+**IMPORTANT:** Use `ss58Encode` from `@polkadot-labs/hdkd-helpers` to convert public keys to addresses. Do NOT use Node.js `Buffer` - it's not available in browsers.
 
 ## Host Storage API
 
@@ -381,6 +477,9 @@ function initializeApp() {
 | Hardcoding chain endpoints | FORBIDDEN | Must use host's provider |
 | Using `window.ethereum` | FORBIDDEN | Not injected in Triangle |
 | Not checking `isHosted()` | RISKY | Code must work in both modes |
+| Using `sandboxProvider.isCorrectEnvironment()` | UNRELIABLE | Use `injectSpektrExtension()` instead |
+| Using Node.js `Buffer` | FORBIDDEN | Not available in browsers - use `ss58Encode` |
+| Waiting for status before fetching accounts | WRONG | Call `getNonProductAccounts()` immediately after detection |
 
 ## Working Example
 
