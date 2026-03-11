@@ -26,6 +26,8 @@ Triangle development is covered by a comprehensive skill family. Load the releva
 | Skill | Purpose | When to Load |
 |-------|---------|--------------|
 | `triangle/OVERVIEW.md` | Architecture, concepts, SDK packages | Starting Triangle development |
+| `triangle/sandbox-check.md` | Check for Host API violations | Before deploying, after migration |
+| `triangle/api-migration.md` | Migrate browser APIs to Host API | Converting existing dApps |
 | `triangle/spektr-manager.md` | Container orchestration for embedded products | Building a host that embeds products |
 | `triangle/authentication.md` | Unified wallet auth (Papp + Extensions) | Implementing wallet connection |
 | `triangle/dotns-resolution.md` | Resolving .dot domains to IPFS content | Loading products from DotNS |

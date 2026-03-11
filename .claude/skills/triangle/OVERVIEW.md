@@ -88,6 +88,8 @@ For hosts that need to embed multiple products with navigation persistence, use 
 
 | Skill | Purpose | When to Load |
 |-------|---------|--------------|
+| `sandbox-check.md` | Check for Host API violations | Before deploying, after migration |
+| `api-migration.md` | Migrate browser APIs to Host API | Converting existing dApps |
 | `spektr-manager.md` | Container orchestration for embedded products | Building a host that embeds products |
 | `authentication.md` | Unified wallet auth (Papp + Extensions) | Implementing wallet connection |
 | `dotns-resolution.md` | Resolving .dot domains to IPFS content | Loading products from DotNS |
@@ -137,12 +139,13 @@ For more complex patterns, see:
 ```
 1. Start from template  →  cp -r templates/minimal-host-app my-app
 2. Develop locally      →  npm run dev (localhost:8000)
-3. Build                →  npm run build (single dist/index.html)
-4. Deploy               →  ./deploy.sh my-app (→ my-app.dot.li)
-5. Test in Host         →  Open in Polkadot Desktop or dot.li
+3. Check compliance     →  npx tsx scripts/sandbox-check.ts 8000 ./
+4. Build                →  npm run build (single dist/index.html)
+5. Deploy               →  ./deploy.sh my-app (→ my-app.dot.li)
+6. Test in Host         →  Open in Polkadot Desktop or dot.li
 ```
 
-**See:** `deploy-frontend/` skill for detailed deployment workflow.
+**See:** `deploy-frontend/` skill for deployment, `triangle/sandbox-check.md` for compliance checking.
 
 ## What's Working Now
 
