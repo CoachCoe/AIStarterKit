@@ -138,6 +138,9 @@ This is advanced. Start by studying the reference implementation:
 | Direct HTTP/fetch from product | FORBIDDEN | Sandboxed iframe, will fail silently |
 | Bundling light client in product | FORBIDDEN | Host provides chain access via API |
 | Using `window.ethereum` | FORBIDDEN | Not injected in Triangle |
+| Web3Modal / wallet connection libs | FORBIDDEN | Host manages wallets entirely |
+| Feature flag services (LaunchDarkly) | FORBIDDEN | No external network access |
+| Analytics services (Cloudflare, etc.) | FORBIDDEN | No external network access |
 | Hardcoding chain endpoints | FORBIDDEN | Must use host's provider |
 | Assuming stable API | RISKY | v0.6 - APIs changing rapidly |
 | Building for all 3 hosts at once | RISKY | Focus on Desktop first |

@@ -55,6 +55,21 @@ The checker creates two files in your repo:
 - Code examples using Host API replacements
 - SDK installation commands
 
+## Prohibited Dependencies
+
+These libraries/services are **incompatible** with the Triangle sandbox:
+
+| Library/Service | Why Prohibited | Alternative |
+|-----------------|----------------|-------------|
+| **Web3Modal** | Host manages wallets entirely | `createAccountsProvider()` |
+| **RainbowKit** | Host manages wallets entirely | `createAccountsProvider()` |
+| **LaunchDarkly** | No external network access | Build-time feature flags or none |
+| **Cloudflare Analytics** | No external network access | None (privacy-preserving) |
+| **Google Analytics** | No external network access | None (privacy-preserving) |
+| **Sentry** | No external network access | Console logging only |
+
+If your project has any of these dependencies, remove them before deployment.
+
 ## What It Detects
 
 | Category | Violations | Host API Replacement |

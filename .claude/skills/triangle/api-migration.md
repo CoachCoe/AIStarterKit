@@ -249,10 +249,36 @@ async function getAccounts() {
 
 ---
 
+## Libraries to Remove
+
+These libraries are **incompatible** with the Triangle sandbox and must be removed entirely:
+
+| Library | Why | Alternative |
+|---------|-----|-------------|
+| **Web3Modal** | Host manages wallets | `createAccountsProvider()` |
+| **RainbowKit** | Host manages wallets | `createAccountsProvider()` |
+| **@walletconnect/*** | Host manages wallets | `createAccountsProvider()` |
+| **LaunchDarkly** | No external network | Build-time flags or none |
+| **Cloudflare Analytics** | No external network | None |
+| **Google Analytics** | No external network | None |
+| **Sentry** | No external network | Console logging |
+| **PostHog** | No external network | None |
+
+```bash
+# Remove from your project
+pnpm remove web3modal @web3modal/wagmi @walletconnect/web3wallet
+pnpm remove @launchdarkly/js-client-sdk
+pnpm remove @sentry/browser @sentry/react
+pnpm remove @cloudflare/next-on-pages
+```
+
+---
+
 ## Migration Checklist
 
 Before deployment, verify:
 
+- [ ] Removed prohibited libraries (Web3Modal, LaunchDarkly, Sentry, etc.)
 - [ ] Installed `@novasamatech/product-sdk@0.6.6-1`
 - [ ] Replaced all direct `fetch()` to external APIs
 - [ ] Replaced all `WebSocket` connections with `createPapiProvider()`
