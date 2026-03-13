@@ -163,6 +163,30 @@ User joins ecosystem
 
 ---
 
+## Sandbox Checker (Development Tool)
+
+dot.li includes a **sandbox API checker** that detects when dApps make prohibited API calls. Enable with `VITE_SANDBOX_CHECKER=true` at build time.
+
+**What it detects:**
+- Direct network: `fetch`, `XMLHttpRequest`, `WebSocket`, `RTCPeerConnection`
+- Direct storage: `localStorage`, `sessionStorage`, `IndexedDB`, cookies
+- Direct wallet: `window.ethereum`, `window.injectedWeb3`, `window.polkadot`
+- Workers: `Worker`, `SharedWorker`, `ServiceWorker.register()`
+
+**Behavior:** Violations are logged to a collapsible panel at viewport bottom. Calls still proceed (log-and-forward) so you can see what breaks.
+
+**Use case:** Run your dApp through dot.li with the checker enabled before deploying to identify Host API compliance issues.
+
+---
+
+## Nested dApp Support
+
+dot.li supports **nested dApps** — when a product embeds another product via iframe, the container dynamically creates bridges for each descendant that sends protocol messages to `window.top`.
+
+This enables composable products where one Triangle product can embed and interact with others.
+
+---
+
 ## Limitations
 
 | Limitation | Status | Notes |
@@ -188,6 +212,23 @@ User joins ecosystem
 - **Repository:** github.com/paritytech/dotli
 - **Light Client Patterns:** [./references/smoldot-patterns.md](./references/smoldot-patterns.md)
 - **Related:** `deploy-frontend/`, `host-api.md`
+
+---
+
+## Iframe Sandbox Permissions
+
+dApps run in a sandboxed iframe with these permissions:
+
+| Permission | Status | Notes |
+|------------|--------|-------|
+| `allow-scripts` | ✅ Enabled | Required for JS execution |
+| `allow-same-origin` | ✅ Enabled | Required for module loading |
+| `allow-forms` | ✅ Enabled | Form submissions allowed |
+| `allow-modals` | ✅ Enabled | `alert()`, `confirm()`, `prompt()` |
+| `allow-pointer-lock` | ✅ Enabled | For games/immersive UIs |
+| Clipboard API | ✅ Enabled | Read/write clipboard |
+| `allow-popups` | ❌ Disabled | No `window.open()` |
+| `allow-top-navigation` | ❌ Disabled | Cannot navigate parent |
 
 ---
 

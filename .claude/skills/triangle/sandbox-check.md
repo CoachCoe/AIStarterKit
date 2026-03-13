@@ -17,11 +17,24 @@ description: "Check Triangle products for Host API sandbox violations. Triggers:
 - Product running locally (e.g., `npm run dev` on port 3000)
 - Playwright installed: `npx playwright install chromium`
 
-## Quick Start
+## Two Ways to Check
+
+### Option 1: Live Checker via dot.li (Easiest)
+
+Deploy your app to Bulletin and access via dot.li with the sandbox checker enabled:
+
+1. Build dot.li with checker: `VITE_SANDBOX_CHECKER=true pnpm build`
+2. Access your app: `https://myapp.dot.li/`
+3. Violations appear in a collapsible panel at viewport bottom
+4. Calls still proceed (log-and-forward) so you can see what breaks
+
+**What it shows:** API name, details (URL, method), timestamp for each violation.
+
+### Option 2: Playwright Script (Detailed Reports)
 
 ```bash
 # From the dotli repo
-cd /Users/shawncoe/Documents/dev/dotli/dotli
+cd ~/polkadot-refs/dotli
 
 # Run against your app (saves results to your repo)
 npx tsx scripts/sandbox-check.ts <port> <your-repo-path>

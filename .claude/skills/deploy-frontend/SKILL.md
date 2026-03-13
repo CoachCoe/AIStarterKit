@@ -143,6 +143,19 @@ ContentHash: 0xe3010170...
 
 Save the CID for the next step.
 
+#### CI/CD: CAR File Upload
+
+For GitHub Actions or other CI environments, use CAR file upload for better reliability:
+
+```yaml
+# .github/workflows/deploy.yml
+- name: Upload to Bulletin
+  run: |
+    dotns bulletin upload ./dist --use-car --parallel -m "$DOTNS_MNEMONIC"
+```
+
+The `--use-car` option packages files into a single CAR archive before upload, which is more reliable in CI environments with network constraints.
+
 ### Step 5: Set Content Hash on Domain
 
 ```bash
