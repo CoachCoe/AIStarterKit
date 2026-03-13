@@ -36,7 +36,7 @@ description: "Deploy frontend to Bulletin Chain + DotNS. Triggers: deploy fronte
 | Chain | Purpose | Endpoint |
 |-------|---------|----------|
 | Asset Hub Paseo | Domain registration, content hash | `wss://asset-hub-paseo-rpc.n.dwellir.com` |
-| Bulletin Paseo | Decentralized storage | `wss://bulletin.dotspark.app` |
+| Bulletin Paseo | Decentralized storage | `wss://paseo-bulletin-rpc.polkadot.io` |
 
 ## First-Time Setup (REQUIRED)
 

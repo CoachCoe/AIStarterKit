@@ -52,21 +52,24 @@ A production-ready Claude Code configuration for building on Polkadot Asset Hub 
 ### 5-Minute Quick Start
 
 ```bash
-# 1. Create your project
+# 1. Create and initialize Foundry project
 mkdir my-polkadot-app && cd my-polkadot-app
-git clone https://github.com/anthropics/polkadot-ai-starter-kit.git temp
+forge init --no-git
+
+# 2. Copy in starter kit files
+git clone https://github.com/CoachCoe/AIStarterKit.git temp
 cp -r temp/.claude temp/CLAUDE.md temp/.env.example temp/.gitignore .
 rm -rf temp
 
-# 2. Initialize Foundry
-forge init --no-git
-forge install OpenZeppelin/openzeppelin-contracts --no-commit
-forge install OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
+# 3. Initialize git and install dependencies
+git init
+forge install OpenZeppelin/openzeppelin-contracts
+forge install OpenZeppelin/openzeppelin-contracts-upgradeable
 
-# 3. Start Claude Code
+# 4. Start Claude Code
 claude
 
-# 4. Ask Claude to help you build!
+# 5. Ask Claude to help you build!
 # "Create a simple token contract and deploy to Previewnet"
 ```
 
@@ -81,8 +84,8 @@ claude
 git clone https://github.com/your-org/polkadot-ai-starter-kit.git
 
 # Copy to your project
-cp -r polkadot-ai-starter-kit/.claude /path/to/your/project/
-cp polkadot-ai-starter-kit/CLAUDE.md /path/to/your/project/
+cp -r AIStarterKit/.claude my-app2
+cp AIStarterKit/CLAUDE.md my-app2
 
 # Customize CLAUDE.md for your project
 ```
@@ -95,11 +98,12 @@ curl -L https://foundry.paradigm.xyz | bash
 foundryup
 
 # Initialize in your project
-forge init --no-git
+forge init --no-git --force
 
 # Install OpenZeppelin
-forge install OpenZeppelin/openzeppelin-contracts --no-commit
-forge install OpenZeppelin/openzeppelin-contracts-upgradeable --no-commit
+git init
+forge install OpenZeppelin/openzeppelin-contracts
+forge install OpenZeppelin/openzeppelin-contracts-upgradeable
 ```
 
 ### 3. Configure Environment
@@ -110,21 +114,21 @@ Store secrets in a decentralized locker instead of local files:
 
 ```bash
 # Install p1p CLI (see cli-setup.md for full instructions)
-cd ~/polkadot-1p && pnpm install && pnpm -F @locker/cli build
+cd polkadot-1p && pnpm install && pnpm -F @locker/cli build
 cd packages/cli && npm link
 
 # Sign in and create locker
 p1p signin --mnemonic
-p1p locker create -n "my-project"
+p1p locker create -n "app3"
 
 # Store secrets
-p1p item create -l "my-project" -t "contracts" \
+p1p item create -l "app3" -t "contracts" \
   --category custom \
   --field private_key="0x..." \
   --field deployer_address="0x..."
 
 # Copy .env.p1p.example to your project
-cp .env.p1p.example .env.p1p
+cp AIStarterKit/.env.p1p.example .env.p1p
 # Edit .env.p1p to use your locker name
 ```
 
@@ -323,32 +327,39 @@ Deploy your frontend to Polkadot's decentralized infrastructure with a `.dot` do
 ### First-Time Setup (Required)
 
 ```bash
-cd /path/to/dotns-sdk/packages/cli
+cd dotns-sdk/packages/cli
 
 # Get mnemonic from p1p (or use $DOTNS_MNEMONIC if set manually)
 export DOTNS_MNEMONIC=$(p1p read "p1p://my-project/dotns/customFields.mnemonic" -n)
 
 # 1. Set Personhood (REQUIRED - cannot skip)
-bun run src/cli/index.ts pop set lite -m "$DOTNS_MNEMONIC"
+bun run dotns-sdk/packages/cli/src/cli/index.ts pop set full -m "$DOTNS_MNEMONIC"
 
 # 2. Authorize for Bulletin storage
-bun run src/cli/index.ts bulletin authorize <your-address> -m "$DOTNS_MNEMONIC"
+bun run dotns-sdk/packages/cli/src/cli/index.ts bulletin authorize <your-address> -m "$DOTNS_MNEMONIC"
+
+# 2b. If that doesn't work, use the *faucet* at the following site to authorize your account:
+https://paritytech.github.io/polkadot-bulletin-chain/authorizations
 ```
 
 ### Deploy Frontend
 
 ```bash
-# Build (ensure vite.config.ts has base: './')
+# Build (IMPORTANT ensure vite.config.ts has base: './')
 pnpm build
 
 # Get mnemonic from p1p
 export DOTNS_MNEMONIC=$(p1p read "p1p://my-project/dotns/customFields.mnemonic" -n)
 
-# Upload to Bulletin
-bun run src/cli/index.ts bulletin upload ./dist --parallel --print-contenthash -m "$DOTNS_MNEMONIC"
+# 1. Upload to Bulletin
+bun run dotns-sdk/packages/cli/src/cli/index.ts bulletin upload ./dist --parallel --print-contenthash
+ --bulletin-rpc wss://paseo-bulletin-rpc.polkadot.io -m "$DOTNS_MNEMONIC"
 
-# Set content hash on domain
-bun run src/cli/index.ts content set <domain-name> <cid> -m "$DOTNS_MNEMONIC"
+# 2. Register your domain
+bun run dotns-sdk/packages/cli/src/cli/index.ts register domain -n <domain-name> -m "$DOTNS_MNEMONIC"
+
+# 3. Then set the content hash (using the CID from your bulletin upload)
+bun run dotns-sdk/packages/cli/src/cli/index.ts content set <domain-name> <cid> -m "$DOTNS_MNEMONIC"
 ```
 
 See `deploy-frontend/` skill for full details and `p1p-secrets/` for secret management.
@@ -399,7 +410,7 @@ Skills are based on patterns from reference repositories. See `.claude/SOURCES.m
 
 ```bash
 # Quick update check
-cd ~/polkadot-refs
+cd polkadot-refs
 for repo in */; do git -C "$repo" pull; done
 ```
 
