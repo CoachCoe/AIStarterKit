@@ -7,8 +7,9 @@ A minimal starter for building Triangle host apps using vanilla JavaScript. This
 - **Account detection** - Auto-detects login/logout via Host
 - **Transaction signing** - System.remark example with finalization tracking
 - **Raw message signing** - Sign arbitrary data via Host modal
-- **Host storage** - Scoped key-value storage (JSON read/write/clear)
+- **Adaptive storage** - Same API works in Host + standalone mode
 - **Chain queries** - Read on-chain state via Host-managed connection
+- **Host detection** - Detect environment type and check connection health
 
 ## Prerequisites
 
@@ -101,10 +102,49 @@ const CHAIN = {
 | File | Purpose |
 |------|---------|
 | `src/index.html` | UI with inline CSS, import maps for dev |
-| `src/main.js` | All SDK patterns in one file |
-| `build.mjs` | esbuild bundler (32 lines) |
+| `src/main.js` | SDK patterns and app logic |
+| `src/lib/host.js` | Host detection utilities (reusable) |
+| `src/lib/storage.js` | Adaptive storage layer (reusable) |
+| `build.mjs` | esbuild bundler |
 | `deploy.sh` | Full deployment workflow |
 | `package.json` | 3 dependencies only |
+
+## Reusable Utilities
+
+### Host Detection (`src/lib/host.js`)
+
+```javascript
+import { detectHostEnvironment, isInHost, checkHostAlive } from './lib/host.js'
+
+// Detect environment: 'desktop-webview' | 'web-iframe' | 'standalone'
+const env = detectHostEnvironment()
+
+// Quick check: are we in any host?
+if (isInHost()) {
+  // Running inside Triangle host
+}
+
+// Check if host connection is still alive (useful after backgrounding)
+const alive = await checkHostAlive()
+if (!alive) {
+  // Prompt user to refresh or reconnect
+}
+```
+
+### Adaptive Storage (`src/lib/storage.js`)
+
+```javascript
+import { storageReadJSON, storageWriteJSON, storageClear } from './lib/storage.js'
+
+// Same API works in Host (encrypted, isolated) and standalone (localStorage)
+await storageWriteJSON('settings', { theme: 'dark' })
+const settings = await storageReadJSON('settings')  // { theme: 'dark' }
+await storageClear('settings')
+
+// Raw strings
+await storageWriteString('token', 'abc123')
+const token = await storageReadString('token')
+```
 
 ## Adapting This Template
 

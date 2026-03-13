@@ -14,6 +14,8 @@
 //   5. Host storage        — read/write/clear JSON data persisted by the Host
 //   6. Chain read          — query on-chain state via createPapiProvider
 //                            (Host-managed chain connection, no direct WebSocket)
+//   7. Adaptive storage    — same API works in host + standalone mode
+//   8. Host detection      — detect environment and check connection health
 //
 // The app auto-initializes on load. If no account is detected, it prompts the
 // user to log in and automatically picks up the account when they do.
@@ -23,6 +25,10 @@
 //   - Remove sections you don't need — each is self-contained
 //   - The imports stay the same if you later move to a bundler
 // ---------------------------------------------------------------------------
+
+// Reusable utilities (see src/lib/ for implementation)
+import { detectHostEnvironment, isInHost, checkHostAlive } from "./lib/host.js";
+import { storageReadJSON, storageWriteJSON, storageClear } from "./lib/storage.js";
 
 import {
   // injectSpektrExtension: injects the Spektr browser extension shim so the
@@ -43,10 +49,6 @@ import {
   //     (required for signSubmitAndWatch)
   createAccountsProvider,
 
-  // metaProvider: subscribe to the transport-level connection status
-  // (connecting / connected / disconnected).
-  metaProvider,
-
   // sandboxTransport: the postMessage-based transport that connects this
   // iframe to the Host. Pass it to SDK factories so they communicate through
   // the Host bridge instead of a direct connection.
@@ -54,11 +56,6 @@ import {
 
   // hostApi: low-level Host API for operations like signRaw.
   hostApi,
-
-  // hostLocalStorage: Host-scoped key/value storage. Data is persisted by the
-  // Host and scoped to this app's domain. Supports readJSON/writeJSON/clear
-  // (also readBytes/writeBytes/readString/writeString).
-  hostLocalStorage,
 
   // createPapiProvider: returns a JsonRpcProvider that routes chain RPC calls
   // through the Host's managed chain connection. Useful when you want the
@@ -177,6 +174,10 @@ function onAccountsChanged(accts) {
 // subscribeAccountConnectionStatus fires "connected" and we re-fetch.
 // ---------------------------------------------------------------------------
 async function init() {
+  // Show host environment immediately (sync check)
+  const env = detectHostEnvironment();
+  log(`Environment: ${env}`, env === "standalone" ? "info" : "ok");
+
   log("Initializing SDK...");
   $statusText.textContent = "Initializing...";
 
@@ -362,25 +363,28 @@ $btnSignRaw.addEventListener("click", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4. Host storage
+// 4. Host storage (using adaptive storage layer)
 // ---------------------------------------------------------------------------
-// The Host provides scoped key/value storage for each app. Data persists
-// across page reloads and is isolated per domain.
+// The adaptive storage layer (src/lib/storage.js) automatically routes to:
+//   - hostLocalStorage when running inside a Triangle host
+//   - browser localStorage when running standalone
+//
+// This allows your app to work in both environments with the same code.
+// Data persists across page reloads and is isolated per domain.
 //
 // API:
-//   hostLocalStorage.writeJSON(key, value) — serialize and store JSON
-//   hostLocalStorage.readJSON(key)         — read and deserialize JSON
-//   hostLocalStorage.clear(key)            — delete a key
+//   storageWriteJSON(key, value) — serialize and store JSON
+//   storageReadJSON(key)         — read and deserialize JSON (returns null if missing)
+//   storageClear(key)            — delete a key
 //
-// Also available: readBytes/writeBytes, readString/writeString for
-// non-JSON data.
+// Also available: storageReadString/storageWriteString for raw strings.
 // ---------------------------------------------------------------------------
 $btnStorWrite.addEventListener("click", async () => {
   try {
     const key = $storageKey.value;
     const val = JSON.parse($storageValue.value);
-    await hostLocalStorage.writeJSON(key, val);
-    log(`Wrote "${key}"`, "ok");
+    await storageWriteJSON(key, val);
+    log(`Wrote "${key}" (${isInHost() ? "host" : "localStorage"})`, "ok");
   } catch (e) {
     log(`Storage write failed: ${e.message}`, "err");
   }
@@ -389,7 +393,7 @@ $btnStorWrite.addEventListener("click", async () => {
 $btnStorRead.addEventListener("click", async () => {
   try {
     const key = $storageKey.value;
-    const val = await hostLocalStorage.readJSON(key);
+    const val = await storageReadJSON(key);
     log(`Read "${key}" -> ${JSON.stringify(val)}`, "ok");
   } catch (e) {
     log(`Storage read failed: ${e.message}`, "err");
@@ -399,7 +403,7 @@ $btnStorRead.addEventListener("click", async () => {
 $btnStorClear.addEventListener("click", async () => {
   try {
     const key = $storageKey.value;
-    await hostLocalStorage.clear(key);
+    await storageClear(key);
     log(`Cleared "${key}"`, "ok");
   } catch (e) {
     log(`Storage clear failed: ${e.message}`, "err");
